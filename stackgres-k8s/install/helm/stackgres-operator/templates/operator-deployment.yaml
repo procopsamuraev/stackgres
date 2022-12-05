@@ -193,11 +193,6 @@ spec:
           secret:
             secretName: {{ include "cert-name" . }}
             optional: false
-            items:
-              - key: tls.key
-                path: root.key
-              - key: tls.crt
-                path: server.crt
         {{- if and .Values.developer.externalOperatorIp .Values.developer.externalOperatorPort }}
         - name: operator-nginx-conf
           configMap:

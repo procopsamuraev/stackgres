@@ -285,15 +285,6 @@ spec:
           secret:
             secretName: {{ include "web-cert-name" . }}
             optional: false
-            items:
-              - key: tls.key
-                path: root.key
-              - key: tls.crt
-                path: server.crt
-              - key: jwt-rsa.key
-                path: jwt-rsa.key
-              - key: jwt-rsa.pub
-                path: jwt-rsa.pub
         - name: operator-nginx
           configMap:
             name: {{ .Values.restapi.name }}-nginx

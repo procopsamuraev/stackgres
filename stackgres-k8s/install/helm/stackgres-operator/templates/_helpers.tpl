@@ -34,6 +34,10 @@
 {{- .Values.cert.webSecretName | default (printf "%s-%s" .Release.Name "web-certs") }}
 {{- end }}
 
+{{- define "collector-cert-name" }}
+{{- .Values.cert.collectorSecretName | default (printf "%s-%s" .Release.Name "col-certs") }}
+{{- end }}
+
 {{- define "stackgres.operator.resetCerts" }}
 {{- $upgradeSecrets := false }}
 {{- $operatorSecret := lookup "v1" "Secret" .Release.Namespace (include "cert-name" .) }}
@@ -47,6 +51,14 @@
 {{- $webSecret := lookup "v1" "Secret" .Release.Namespace (include "web-cert-name" .) }}
 {{- if $webSecret }}
   {{- if or (not (index $webSecret.data "tls.key")) (not (index $webSecret.data "tls.crt")) }}
+    {{- $upgradeSecrets = true }}
+  {{- end }}
+{{- else }}
+  {{- $upgradeSecrets = true }}
+{{- end }}
+{{- $colSecret := lookup "v1" "Secret" .Release.Namespace (include "collector-cert-name" .) }}
+{{- if $colSecret }}
+  {{- if or (not (index $colSecret.data "tls.key")) (not (index $colSecret.data "tls.crt")) }}
     {{- $upgradeSecrets = true }}
   {{- end }}
 {{- else }}
@@ -80,4 +92,3 @@
 {{- end }}
 {{- if or $noStackGresCrdAvailable $upgradeCrds }}true{{- else }}false{{- end }}
 {{- end }}
-

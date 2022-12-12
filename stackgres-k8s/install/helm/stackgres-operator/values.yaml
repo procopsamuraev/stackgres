@@ -66,6 +66,41 @@ adminui:
     # The port used to expose the service on kubernetes nodes
     # nodePort:
     # nodePortHTTP:
+collector:
+  name: stackgres-collector
+  image:
+    name: "otel/opentelemetry-collector-contrib"
+    tag: "0.66.0"
+    pullPolicy: "IfNotPresent"
+  controller:
+    resources: {}
+  resources: {}
+  affinity: {}
+  annotations: {}
+  nodeSelector: {}
+  serviceAccount:
+    annotations: {}
+  service:
+    annotations: {}
+  tolerations: {}
+  volumeMounts: []
+  volumes: []
+  extensions: {}
+  processors: {}
+  exporters:
+    logging:
+      verbosity: detailed
+  service:
+    telemetry:
+      logs:
+        level: debug
+    extensions: []
+    pipelines:
+      metrics:
+        receivers: [prometheus]
+        processors:
+        exporters:
+          - logging
 
 serviceAccount:
   create: true
@@ -79,20 +114,25 @@ rbac:
 deploy:
   operator: true
   restapi: true
+  collector: true
 
 cert:
   autoapprove: true
   createForOperator: true
   createForWebApi: true
+  createForCollector: true
   resetCerts: false
   # secretName:
   # webSecretName:
+  # collectorSecretName:
   # key:
   # crt:
   # jwtRsaKey:
   # jwtRsaPub:
   # webKey:
   # webCrt:
+  # colKey:
+  # colCrt:
   certManager:
     autoConfigure: false
     duration: "2160h"

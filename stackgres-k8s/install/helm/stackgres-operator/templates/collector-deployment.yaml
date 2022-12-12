@@ -1,0 +1,223 @@
+{{- if .Values.deploy.collector }}
+apiVersion: "apps/v1"
+kind: "Deployment"
+metadata:
+  {{- with .Values.collector.annotations }}
+  annotations:
+    {{ toYaml . | nindent 4 }}
+  {{- end }}
+  labels:
+    app: {{ .Values.collector.name }}
+    version: "{{ .Chart.Version }}"
+    group:  stackgres.io
+  name: {{ .Values.collector.name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.collector.name }}
+      group:  stackgres.io
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.collector.name }}
+        group:  stackgres.io
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/collector-otelcol-configmap.yaml") . | sha256sum }}
+    spec:
+      serviceAccountName: {{ .Values.collector.name }}
+      {{- if .Values.serviceAccount.create }}
+      {{- if .Values.serviceAccount.repoCredentials }}
+      imagePullSecrets:
+      {{- range .Values.serviceAccount.repoCredentials }}
+        - name: {{ . }}
+      {{- end }}
+      {{- end }}
+      {{- end }}
+      securityContext:
+        {{- if or (not (.Capabilities.APIVersions.Has "project.openshift.io/v1")) .Values.developer.disableArbitraryUser }}
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        {{- end }}
+      shareProcessNamespace: true
+      containers:
+      - name: {{ .Values.collector.name }}
+        image: "{{ .Values.collector.image.name }}:{{ .Values.collector.image.tag }}"
+        imagePullPolicy: {{ .Values.collector.image.pullPolicy }}
+        env:
+        {{- if eq "true" (include "stackgres.operator.resetCerts" .) }}
+          - name: RESET_CERTS
+            value: "true"
+        {{- end }}
+        command:
+        - /otelcol-contrib
+        - --config
+        - /etc/otelcol-contrib/config.yaml
+        ports:
+        - containerPort: 8080
+          name: "http"
+          protocol: "TCP"
+        - containerPort: 8443
+          name: "https"
+          protocol: "TCP"
+        livenessProbe:
+          httpGet:
+            port: 13133
+            scheme: "HTTP"
+          initialDelaySeconds: 5
+          periodSeconds: 30
+          timeoutSeconds: 10
+        readinessProbe:
+          httpGet:
+            port: 13133
+            scheme: "HTTP"
+          initialDelaySeconds: 5
+          periodSeconds: 30
+          timeoutSeconds: 2
+        {{- with .Values.collector.resources }}
+        resources:
+        {{- toYaml . | nindent 10 }}
+        {{- end }}
+        volumeMounts:
+          - name: collector-certs
+            mountPath: /etc/otelcol-contrib/certs
+            readOnly: true
+          - name: collector-otelcol-contrib-etc
+            mountPath: /etc/otelcol-contrib/config.yaml
+            subPath: config.yaml
+            readOnly: true
+      {{- with .Values.collector.volumeMounts }}
+          {{- toYaml . | nindent 10 }}
+      {{- end}}
+      - name: {{ .Values.collector.name }}-controller
+        image: {{ template "kubectl.image" . }}
+        imagePullPolicy: "IfNotPresent"
+        command:
+        - /bin/bash
+        - -ecx
+        - |
+            kill_collector() {
+              for FILE in /proc/[0-9]*
+              do
+                echo "${FILE##*/} $(cat "$FILE/cmdline" | tr '\0' ' ')"
+              done \
+                | grep '^[0-9]* /otelcol-contrib ' \
+                | cut -d ' ' -f 1 \
+                | while read -r PID
+                  do
+                    kill "$PID"
+                  done
+            }
+            stop() {
+              touch "$HOME"/stop
+              for FILE in /proc/[0-9]*
+              do
+                echo "$FILE $(cat "$FILE/cmdline" | tr '\0' ' ')"
+              done \
+                | grep "/proc/[0-9]* [s]leep " \
+                | cut -d ' ' -f 1 \
+                | cut -d / -f 3 \
+                | while read -r PID
+                  do
+                    echo "Killing sleep command with pid $PID to speed up termination"
+                    kill "$PID"
+                  done
+            }
+            trap "stop" SIGTERM
+            PREVIOUS_CLUSTER_PODS=""
+            while ({ set +x; } 2>/dev/null; [ ! -f "$HOME"/stop ])
+            do
+              ({ set +x; } 2>/dev/null; sleep 10)
+              CLUSTER_PODS="$(kubectl get pod -A -l app=StackGresCluster,stackgres.io/cluster=true \
+                --template '{{ "{{ range .items }}{{ if .status.podIP }}{{ printf \"%s.%s:%s \" .metadata.namespace .metadata.name .status.podIP }}{{ end }}{{ end }}" }}')"
+              if [ "$CLUSTER_PODS" = "$PREVIOUS_CLUSTER_PODS" ]
+              then
+                continue
+              fi
+              if [ -z "$CLUSTER_PODS" ]
+              then
+                cp /etc/otelcol-contrib/empty-config.yaml /etc/otelcol-contrib/config.
+                kill_collector
+                continue
+              fi
+              eval "
+                cat << CONFIG_EOF > /etc/otelcol-contrib/config.yaml.tmp
+            $(cat /etc/otelcol-contrib/template-config.yaml)
+            CONFIG_EOF
+                "
+              mv /etc/otelcol-contrib/config.yaml.tmp /etc/otelcol-contrib/config.yaml
+              kill_collector
+              PREVIOUS_CLUSTER_PODS="$CLUSTER_PODS"
+            done
+        {{- with .Values.collector.controller.resources }}
+        resources:
+        {{- toYaml . | nindent 10 }}
+        {{- end }}
+        volumeMounts:
+          - name: collector-otelcol-contrib-etc
+            mountPath: /etc/otelcol-contrib
+            readOnly: false
+          - name: collector-otelcol-contrib-conf
+            mountPath: /etc/otelcol-contrib/template-config.yaml
+            subPath: template-config.yaml
+            readOnly: true
+          - name: collector-otelcol-contrib-conf
+            mountPath: /etc/otelcol-contrib/empty-config.yaml
+            subPath: empty-config.yaml
+            readOnly: true
+      initContainers:
+      - name: {{ .Values.collector.name }}-init
+        image: {{ template "kubectl.image" . }}
+        imagePullPolicy: "IfNotPresent"
+        command:
+        - /bin/bash
+        - -ecx
+        - |
+            cp /etc/otelcol-contrib/empty-config.yaml /etc/otelcol-contrib/config.yaml
+        {{- with .Values.collector.controller.resources }}
+        resources:
+        {{- toYaml . | nindent 10 }}
+        {{- end }}
+        volumeMounts:
+          - name: collector-otelcol-contrib-etc
+            mountPath: /etc/otelcol-contrib
+            readOnly: false
+          - name: collector-otelcol-contrib-conf
+            mountPath: /etc/otelcol-contrib/empty-config.yaml
+            subPath: empty-config.yaml
+            readOnly: true
+      volumes:
+        - name: collector-certs
+          secret:
+            secretName: {{ include "collector-cert-name" . }}
+            optional: true
+        - name: collector-otelcol-contrib-conf
+          configMap:
+            name: {{ .Values.collector.name }}-otelcol
+            optional: false
+            items:
+              - key: template-config.yaml
+                path: template-config.yaml
+              - key: empty-config.yaml
+                path: empty-config.yaml
+        - name: collector-otelcol-contrib-etc
+          emptyDir: {}
+      {{- with .Values.collector.volumes }}
+        {{- toYaml . | nindent 8 }}
+      {{- end}}
+      {{- with .Values.collector.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end}}
+      {{- with .Values.collector.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end}}
+      {{- with .Values.collector.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

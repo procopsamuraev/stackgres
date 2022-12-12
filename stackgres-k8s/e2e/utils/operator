@@ -681,7 +681,8 @@ upgrade_operator_vanilla() {
       --set developer.externalOperatorPort="$E2E_LOCAL_OPERATOR_SSL_PORT" \
       "$@"
   else
-    helm upgrade stackgres-operator --namespace "$OPERATOR_NAMESPACE" "$OPERATOR_VERSION_HELM_URL" "$@"
+    helm upgrade stackgres-operator --namespace "$OPERATOR_NAMESPACE" "$OPERATOR_VERSION_HELM_URL" \
+      "$@"
   fi
   after_operator_install_or_upgrade
 }

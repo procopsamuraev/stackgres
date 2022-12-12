@@ -211,6 +211,7 @@ spec:
             kubectl apply -f /tmp/validating-webhook-configuration.yaml
             kubectl apply -f /tmp/mutating-webhook-configuration.yaml
             {{- end }}
+
             {{- if .Values.cert.createForWebApi }}
             {{- if or (not .Values.cert.webKey) (not .Values.cert.webCrt) }}
             cat << EOF > /tmp/csr-web.conf
@@ -254,6 +255,47 @@ spec:
             
             kubectl delete -f /tmp/web-certificate-secret.yaml --ignore-not-found
             kubectl apply -f /tmp/web-certificate-secret.yaml
+            {{- end }}
+            {{- end }}
+
+            {{- if .Values.cert.createForCollector }}
+            {{- if or (not .Values.cert.colKey) (not .Values.cert.colCrt) }}
+            cat << EOF > /tmp/csr-col.conf
+            [req]
+            req_extensions = v3_req
+            distinguished_name = req_distinguished_name
+            [req_distinguished_name]
+            [ v3_req ]
+            basicConstraints = CA:FALSE
+            keyUsage = nonRepudiation, digitalSignature, keyEncipherment
+            extendedKeyUsage = serverAuth
+            subjectAltName = @alt_names
+            [alt_names]
+            DNS.1 = {{ .Values.restapi.name  }}
+            DNS.2 = {{ .Values.restapi.name  }}.{{ .Release.Namespace }}
+            DNS.3 = {{ .Values.restapi.name  }}.{{ .Release.Namespace }}.svc
+            DNS.4 = {{ .Values.restapi.name  }}.{{ .Release.Namespace }}.svc.cluster.local
+            EOF
+            
+            openssl req -new -nodes -text -keyout /tmp/col.key \
+                -subj "/CN={{ .Values.restapi.name  }}.{{ .Release.Namespace }}" \
+                -out /tmp/server-col.csr \
+                -config /tmp/csr-col.conf
+            openssl rsa -in /tmp/col.key -pubout -out /tmp/col.pem
+            openssl x509 -signkey /tmp/col.key -in /tmp/server-col.csr \
+              -req -days 365 -out /tmp/server-col.crt
+            COL_KEY="$(cat /tmp/col.key | base64 | tr -d '\n')"
+            COL_CRT="$(cat /tmp/server-col.crt | base64 | tr -d '\n')"
+            {{- $_ := set .Values.cert "colCrt" "${COL_CRT}" }}
+            {{- $_ := set .Values.cert "colKey" "${COL_KEY}" }}
+            cat << EOF > /tmp/collector-certificate-secret.yaml
+            {{- include (print $.Template.BasePath "/collector-certificate-secret.yaml") . | indent 12 }}
+            EOF
+            {{- $_ := set .Values.cert "colCrt" nil }}
+            {{- $_ := set .Values.cert "colKey" nil }}
+            
+            kubectl delete -f /tmp/collector-certificate-secret.yaml --ignore-not-found
+            kubectl apply -f /tmp/collector-certificate-secret.yaml
             {{- end }}
             {{- end }}
 {{- end }}

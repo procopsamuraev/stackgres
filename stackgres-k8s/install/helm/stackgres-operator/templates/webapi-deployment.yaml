@@ -16,7 +16,7 @@ metadata:
   name: {{ .Values.restapi.name }}
   namespace: {{ .Release.Namespace }}
 spec:
-  replicas: {{ if or (eq "true" (include "stackgres.operator.resetCerts" .)) (eq "true" (include "stackgres.operator.upgradeCrds" .)) }}0{{ else }}1{{ end }}
+  replicas: 1
   selector:
     matchLabels:
       app: {{ .Values.restapi.name }}
@@ -69,6 +69,10 @@ spec:
           {{- end }}
           {{- end }}
         env:
+          {{- if eq "true" (include "stackgres.operator.resetCerts" .) }}
+          - name: RESET_CERTS
+            value: "true"
+          {{- end }}
           - name: RESTAPI_NAMESPACE
             valueFrom:
               fieldRef:

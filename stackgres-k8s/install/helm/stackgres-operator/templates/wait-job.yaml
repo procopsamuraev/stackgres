@@ -31,7 +31,7 @@ spec:
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ .Release.Name }}-init
+      serviceAccountName: {{ .Values.configurator.name }}
       restartPolicy: OnFailure
       terminationGracePeriodSeconds: 0
       {{- with .Values.jobs.tolerations }}
@@ -54,11 +54,10 @@ spec:
           - "-ecx"
           - |
             {{- if .Values.deploy.operator }}
-            kubectl set env -n '{{ .Release.Namespace }}' 'deployment/{{ .Release.Name }}' DISABLE_RECONCILIATION-
-            kubectl scale --timeout 1h --replicas 1 -n '{{ .Release.Namespace }}' 'deployment/{{ .Release.Name }}'
+            kubectl set env -n '{{ .Release.Namespace }}' 'deployment/{{ .Release.Name }}' DISABLE_RECONCILIATION- RESET_CERTS-
             {{- end }}
             {{- if .Values.deploy.restapi }}
-            kubectl scale --timeout 1h --replicas 1 -n '{{ .Release.Namespace }}' 'deployment/{{ .Values.restapi.name }}'
+            kubectl set env -n '{{ .Release.Namespace }}' 'deployment/{{ .Values.restapi.name }}' RESET_CERTS-
             {{- end }}
             {{- if .Values.deploy.operator }}
             kubectl rollout status -n '{{ .Release.Namespace }}' 'deployment/{{ .Release.Name }}'

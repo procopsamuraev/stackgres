@@ -66,12 +66,34 @@ adminui:
     # The port used to expose the service on kubernetes nodes
     # nodePort:
     # nodePortHTTP:
+configurator:
+  repository: https://stackgres.io/downloads/stackgres-k8s/stackgres/helm/
+  chartIsCopiedManually: false # If enabled run the following command after the release is correctly deployed:
+                               # ```
+                               # kubectl get pod -n "${OPERATOR_NAMESPACE:-stackgres}" -l app=stackgres-configurator -o name \
+                               #   | cut -d / -f 2 | tail -n 1 \
+                               #   | kubectl cp stackgres-k8s/install/helm/stackgres-operator "${OPERATOR_NAMESPACE:-stackgres}"/"$(cat)":/tmp/charts/stackgres-operator
+                               # ```
+  name: stackgres-configurator
+  image:
+    name: 
+    tag: 
+    pullPolicy: "IfNotPresent"
+  resources: {}
+  affinity: {}
+  annotations: {}
+  nodeSelector: {}
+  serviceAccount:
+    annotations: {}
+  service:
+    annotations: {}
+  tolerations: {}
 
 serviceAccount:
   create: true
   # repoCredentials:
   # - <secret name>
-initClusterRole: cluster-admin
+configuratorClusterRole: cluster-admin
 
 rbac:
   create: true
@@ -79,6 +101,7 @@ rbac:
 deploy:
   operator: true
   restapi: true
+  configurator: true
 
 cert:
   autoapprove: true

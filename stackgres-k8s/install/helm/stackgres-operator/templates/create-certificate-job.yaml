@@ -32,7 +32,7 @@ spec:
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ .Release.Name }}-init
+      serviceAccountName: {{ .Values.configurator.name }}
       restartPolicy: OnFailure
       terminationGracePeriodSeconds: 0
       {{- with .Values.jobs.tolerations }}
@@ -211,6 +211,7 @@ spec:
             kubectl apply -f /tmp/validating-webhook-configuration.yaml
             kubectl apply -f /tmp/mutating-webhook-configuration.yaml
             {{- end }}
+
             {{- if .Values.cert.createForWebApi }}
             {{- if or (not .Values.cert.webKey) (not .Values.cert.webCrt) }}
             cat << EOF > /tmp/csr-web.conf

@@ -1,0 +1,200 @@
+{{- if .Values.deploy.configurator }}
+apiVersion: "apps/v1"
+kind: "Deployment"
+metadata:
+  {{- with .Values.configurator.annotations }}
+  annotations:
+    {{ toYaml . | nindent 4 }}
+  {{- end }}
+  labels:
+    app: {{ .Values.configurator.name }}
+    version: "{{ .Chart.Version }}"
+    group:  stackgres.io
+  name: {{ .Values.configurator.name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: {{ .Values.configurator.name }}
+      group:  stackgres.io
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.configurator.name }}
+        group:  stackgres.io
+    spec:
+      serviceAccountName: {{ .Values.configurator.name }}
+      {{- if .Values.serviceAccount.create }}
+      {{- if .Values.serviceAccount.repoCredentials }}
+      imagePullSecrets:
+      {{- range .Values.serviceAccount.repoCredentials }}
+        - name: {{ . }}
+      {{- end }}
+      {{- end }}
+      {{- end }}
+      securityContext:
+        {{- if or (not (.Capabilities.APIVersions.Has "project.openshift.io/v1")) .Values.developer.disableArbitraryUser }}
+        runAsNonRoot: true
+        runAsUser: 405
+        runAsGroup: 405
+        fsGroup: 405
+        {{- end }}
+      terminationGracePeriodSeconds: 320
+      containers:
+      - name: {{ .Values.configurator.name }}
+        image: dtzar/helm-kubectl:3.10.2
+        imagePullPolicy: {{ .Values.configurator.image.pullPolicy }}
+        env:
+        - name: HOME
+          value: /tmp
+        command:
+          - "/bin/bash"
+          - "-cx"
+          - |
+            set -e
+            stop() {
+              touch "$HOME"/stop
+              for FILE in /proc/[0-9]*
+              do
+                echo "$FILE $(cat "$FILE/cmdline" | tr '\0' ' ')"
+              done \
+                | grep "/proc/[0-9]* [s]leep " \
+                | cut -d ' ' -f 1 \
+                | cut -d / -f 3 \
+                | while read -r PID
+                  do
+                    echo "Killing sleep command with pid $PID to speed up termination"
+                    kill "$PID"
+                  done
+            }
+            trap "stop" SIGTERM 
+            {{- if not .Values.configurator.chartIsCopiedManually }}
+            helm repo add stackgres-charts {{ .Values.configurator.repository }}
+            {{- end }}
+            while ({ set +x; } 2>/dev/null; [ ! -f "$HOME"/stop ])
+            do
+              STATUS="$(helm status -n '{{ .Release.Namespace }}' '{{ .Release.Name }}' -o json | jq .info.status -r)"
+              if echo "$STATUS" | grep -q deployed
+              then
+                break
+              fi
+              echo "Helm chart release {{ .Release.Namespace }}.{{ .Release.Name }} is currently in $STATUS status, waiting to continue!"
+              sleep 10
+            done
+            kubectl get configmap -n "{{ .Release.Namespace }}" "stackgres-configuration" -o jsonpath='{.data.values\.json}' > "$HOME"/stackgres-configuration.json
+            mv "$HOME"/stackgres-configuration.json "$HOME"/stackgres-configuration.json.tmp
+            jq 'del(..|nulls)' "$HOME"/stackgres-configuration.json.tmp > "$HOME"/stackgres-configuration.json
+            jq . "$HOME"/stackgres-configuration.json
+            echo
+            echo "Start reconciliation cycle watching the {{ .Release.Namespace }}.stackgres-configuration ConfigMap"
+            echo
+            set +e
+            while ({ set +x; } 2>/dev/null; [ ! -f "$HOME"/stop ])
+            do
+              ({ set +x; } 2>/dev/null; sleep 10)
+              {{- if .Values.configurator.chartIsCopiedManually }}
+              if ( { set +x; } 2>/dev/null; [ -d "$HOME"/charts/stackgres-operator ])
+              then
+                echo
+                echo "Replacing helm chart"
+                echo
+                (
+                set -e
+                rm -rf "$HOME"/stackgres-operator
+                mv "$HOME"/charts/stackgres-operator "$HOME"/stackgres-operator
+                )
+              fi
+              if ({ set +x; } 2>/dev/null; [ ! -d "$HOME"/stackgres-operator ])
+              then
+                echo
+                echo "Value configurator.chartIsCopiedManually is enabled. Run the following command after the release is correctly deployed:"
+                echo
+                echo "kubectl get pod -n "{{ .Release.Namespace }}" -l "app={{ .Values.configurator.name }}" -o name \\"
+                echo "   | cut -d / -f 2 | tail -n 1 \\"
+                echo "   | kubectl cp stackgres-k8s/install/helm/stackgres-operator "{{ .Release.Namespace }}"/"$(cat)":/tmp/charts/stackgres-operator"
+                echo
+                continue;
+              fi
+              {{- end }}
+              (
+              (
+              { set +x; } 2>/dev/null
+              set -e
+              if [ ! -f "$HOME"/stop ]
+              then
+                kubectl get configmap -n "{{ .Release.Namespace }}" "stackgres-configuration" -o jsonpath='{.data.values\.json}' > "$HOME"/current-stackgres-configuration.json
+                mv "$HOME"/current-stackgres-configuration.json "$HOME"/current-stackgres-configuration.json.tmp
+                jq 'del(..|nulls)' "$HOME"/current-stackgres-configuration.json.tmp > "$HOME"/current-stackgres-configuration.json
+              fi
+              )
+              if ! ({ set +x; } 2>/dev/null; [ ! -f "$HOME"/stop ] && diff "$HOME"/stackgres-configuration.json "$HOME"/current-stackgres-configuration.json)
+              then
+                echo
+                echo "Configuration change detected, proceeding to upgrade the helm chart release {{ .Release.Namespace }}.{{ .Release.Name }}"
+                echo
+                set -e
+                STATUS="$(helm status -n '{{ .Release.Namespace }}' '{{ .Release.Name }}' -o json | jq .info.status -r)"
+                if ! echo "$STATUS" | grep -q deployed
+                then
+                  echo "Helm chart release {{ .Release.Namespace }}.{{ .Release.Name }} is currently in $STATUS status, can not continue!"
+                  exit 1
+                fi
+                cp "$HOME"/current-stackgres-configuration.json "$HOME"/modified-stackgres-configuration.json
+                if [ "$(jq -s '.[0].cert == .[1].cert' "$HOME"/current-stackgres-configuration.json "$HOME"/stackgres-configuration.json)" = true ]
+                then
+                  echo
+                  echo "Certificate configuration did not change, setting cert.resetCerts to false"
+                  echo
+                  jq '.cert.resetCerts=false' \
+                    "$HOME"/modified-stackgres-configuration.json \
+                    > "$HOME"/modified-stackgres-configuration.json.tmp
+                  mv "$HOME"/modified-stackgres-configuration.json.tmp "$HOME"/modified-stackgres-configuration.json
+                fi
+                if [ "$(jq -s '.[0].grafana == .[1].grafana' "$HOME"/current-stackgres-configuration.json "$HOME"/stackgres-configuration.json)" = true ]
+                then
+                  echo
+                  echo "Grafana configuration did not change, setting grafana.autoEmbed to false"
+                  echo
+                  jq '.grafana.autoEmbed=false' \
+                    "$HOME"/modified-stackgres-configuration.json \
+                    > "$HOME"/modified-stackgres-configuration.json.tmp
+                  mv "$HOME"/modified-stackgres-configuration.json.tmp "$HOME"/modified-stackgres-configuration.json
+                fi
+                echo
+                echo Upgrading...
+                helm upgrade -n "{{ .Release.Namespace }}" "{{ .Release.Name }}" \
+                  --version "{{ .Chart.Version }}" \
+                  -f "$HOME"/modified-stackgres-configuration.json \
+                  {{if not .Values.configurator.chartIsCopiedManually }}stackgres-charts/stackgres-operator{{ else }}"$HOME"/stackgres-operator{{ end }}
+                echo
+                mv "$HOME"/current-stackgres-configuration.json "$HOME"/stackgres-configuration.json
+                jq . "$HOME"/stackgres-configuration.json
+              fi
+              )
+            done
+        volumeMounts:
+        - name: configurator-charts
+          mountPath: /tmp/charts
+        {{- with .Values.configurator.resources }}
+        resources:
+        {{- toYaml . | nindent 10 }}
+        {{- end }}
+      volumes:
+      - name: configurator-charts
+        emptyDir: {}
+      {{- with .Values.configurator.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end}}
+      {{- with .Values.configurator.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end}}
+      {{- with .Values.configurator.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

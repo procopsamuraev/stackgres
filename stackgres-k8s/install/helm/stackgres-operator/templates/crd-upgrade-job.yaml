@@ -31,7 +31,7 @@ spec:
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ .Release.Name }}-init
+      serviceAccountName: {{ .Values.configurator.name }}
       {{- if .Values.serviceAccount.create }}
       {{- if .Values.serviceAccount.repoCredentials }}
       imagePullSecrets:

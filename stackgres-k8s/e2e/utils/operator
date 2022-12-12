@@ -678,9 +678,18 @@ upgrade_operator_vanilla() {
       --set cert.createForOperator=false \
       --set developer.externalOperatorIp="$E2E_LOCAL_OPERATOR_IP" \
       --set developer.externalOperatorPort="$E2E_LOCAL_OPERATOR_SSL_PORT" \
+      $([ "$STACKGRES_VERSION" = "$LOCAL_STACKGRES_VERSION" ] && printf '%s %s' --set configurator.chartIsCopiedManually=true) \
       "$@"
   else
-    helm upgrade stackgres-operator --namespace "$OPERATOR_NAMESPACE" "$OPERATOR_VERSION_HELM_URL" "$@"
+    helm upgrade stackgres-operator --namespace "$OPERATOR_NAMESPACE" "$OPERATOR_VERSION_HELM_URL" \
+      $([ "$STACKGRES_VERSION" = "$LOCAL_STACKGRES_VERSION" ] && printf '%s %s' --set configurator.chartIsCopiedManually=true) \
+      "$@"
+  fi
+  if [ "$STACKGRES_VERSION" = "$LOCAL_STACKGRES_VERSION" ]
+  then
+    wait_until eval 'kubectl get pod -n "$OPERATOR_NAMESPACE" -l app=stackgres-configurator -o name \
+      | cut -d / -f 2 | tail -n 1 \
+      | kubectl cp "$OPERATOR_VERSION_HELM_URL" "$OPERATOR_NAMESPACE"/"$(cat)":/tmp/charts/stackgres-operator'
   fi
   after_operator_install_or_upgrade
 }

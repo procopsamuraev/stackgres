@@ -4,7 +4,7 @@ kind: "Deployment"
 metadata:
   {{- with .Values.collector.annotations }}
   annotations:
-    {{ toYaml . | nindent 4 }}
+    {{- toYaml . | nindent 4 }}
   {{- end }}
   labels:
     app: {{ .Values.collector.name }}

@@ -13,7 +13,7 @@ metadata:
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
     "helm.sh/hook-weight": "50"
     {{- with .Values.jobs.annotations }}
-    {{ toYaml . | nindent 4 }}
+    {{- toYaml . | nindent 4 }}
     {{- end }}    
 spec:
   template:
@@ -31,7 +31,7 @@ spec:
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ .Values.configurator.name }}
+      serviceAccountName: {{ .Release.Name }}-init
       restartPolicy: OnFailure
       terminationGracePeriodSeconds: 0
       {{- with .Values.jobs.tolerations }}

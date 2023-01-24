@@ -14,7 +14,7 @@ data:
     extensions:
       health_check:
         endpoint: 0.0.0.0:13133
-    {{- with .Values.collector.extensions }}
+    {{- with .Values.collector.config.extensions }}
       {{- toYaml . | nindent 6 }}
     {{- end }}
     receivers:
@@ -40,28 +40,28 @@ data:
     done
     )
     exporters:
-    {{- with .Values.collector.exporters }}
+    {{- with .Values.collector.config.exporters }}
       {{- toYaml . | nindent 6 }}
     {{- end }}
     service:
       telemetry:
-        {{- with .Values.collector.service.telemetry }}
+        {{- with .Values.collector.config.service.telemetry }}
           {{- toYaml . | nindent 10 }}
         {{- end }}
       extensions:
         - health_check
-      {{- with .Values.collector.service.extensions }}
+      {{- with .Values.collector.config.service.extensions }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
       pipelines:
-        {{- with .Values.collector.service.pipelines }}
+        {{- with .Values.collector.config.service.pipelines }}
           {{- toYaml . | nindent 10 }}
         {{- end }}
   empty-config.yaml: |
     extensions:
       health_check:
         endpoint: 0.0.0.0:13133
-    {{- with .Values.collector.extensions }}
+    {{- with .Values.collector.config.extensions }}
       {{- toYaml . | nindent 6 }}
     {{- end }}
     receivers:
@@ -71,21 +71,21 @@ data:
             - job_name: "dummy"
               scrape_interval: 1y
     exporters:
-    {{- with .Values.collector.exporters }}
+    {{- with .Values.collector.config.exporters }}
       {{- toYaml . | nindent 6 }}
     {{- end }}
     service:
       telemetry:
-        {{- with .Values.collector.service.telemetry }}
+        {{- with .Values.collector.config.service.telemetry }}
           {{- toYaml . | nindent 10 }}
         {{- end }}
       extensions:
         - health_check
-      {{- with .Values.collector.service.extensions }}
+      {{- with .Values.collector.config.service.extensions }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
       pipelines:
-        {{- with .Values.collector.service.pipelines }}
+        {{- with .Values.collector.config.service.pipelines }}
           {{- toYaml . | nindent 10 }}
         {{- end }}
 {{- end }}

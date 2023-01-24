@@ -4,7 +4,7 @@ kind: "Deployment"
 metadata:
   {{- with .Values.operator.annotations }}
   annotations:
-    {{ toYaml . | nindent 4 }}
+    {{- toYaml . | nindent 4 }}
   {{- end }}
   labels:
     app: {{ .Release.Name }}

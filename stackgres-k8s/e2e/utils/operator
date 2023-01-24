@@ -72,73 +72,43 @@ setup_images() {
 
 build_components() {
   echo "Building components..."
-  (
-  cd "$STACKGRES_PATH/src"
-  ./mvnw clean package -DskipTests > "$TARGET_PATH/build-components.log" 2>&1
-  shell api-web/src/main/swagger/build.sh
-  )
+  sh stackgres-k8s/ci/build/build.sh parent-java operator-framework-java test-util-java common-java \
+    operator-java restapi-java jobs-java cluster-controller distributedlogs-controller admin-ui
 }
 
 build_operator_image() {
   echo "Building operator image..."
-  (
-  cd "$STACKGRES_PATH/src"
-  shell "operator/src/main/$STACKGRES_IMAGE_BUILDER/build-image-jvm.sh"
-  )
+  sh stackgres-k8s/ci/build/build.sh operator-jvm-image
 }
 
 build_restapi_image() {
   echo "Building restapi image..."
-  (
-  cd "$STACKGRES_PATH/src"
-  shell "api-web/src/main/$STACKGRES_IMAGE_BUILDER/build-image-jvm.sh"
-  )
+  sh stackgres-k8s/ci/build/build.sh restapi-jvm-image
 }
 
 build_jobs_image() {
   echo "Building jobs image..."
-  (
-  cd "$STACKGRES_PATH/src"
-  shell "jobs/src/main/$STACKGRES_IMAGE_BUILDER/build-image-jvm.sh"
-  )
+  sh stackgres-k8s/ci/build/build.sh jobs-jvm-image
 }
 
 build_cluster_controller_image() {
   echo "Building cluster-controller image..."
-  (
-  cd "$STACKGRES_PATH/src"
-  shell "cluster-controller/src/main/$STACKGRES_IMAGE_BUILDER/build-image-jvm.sh"
-  )
+  sh stackgres-k8s/ci/build/build.sh cluster-controller-jvm-image
 }
 
 build_distributedlogs_controller_image() {
   echo "Building distributedlogs-controller image..."
-  (
-  cd "$STACKGRES_PATH/src"
-  shell "distributedlogs-controller/src/main/$STACKGRES_IMAGE_BUILDER/build-image-jvm.sh"
-  )
+  sh stackgres-k8s/ci/build/build.sh distributedlogs-controller-jvm-image
 }
 
 build_adminui_image() {
   echo "Building admin-ui image..."
-  (
-  cd "$STACKGRES_PATH/src"
-  shell admin-ui/npmw install
-  ! test -f admin-ui/node_modules/prettycron/node_modules/later/index.js \
-    || sed -i 's/later-cov/later/' admin-ui/node_modules/prettycron/node_modules/later/index.js
-  shell admin-ui/npmw run build
-  shell admin-ui/build.sh
-  shell "admin-ui/$STACKGRES_IMAGE_BUILDER/build.sh"
-  )
+  sh stackgres-k8s/ci/build/build.sh admin-ui-image
 }
 
 build_helm_artifacts() {
   echo "Building helm artifacts..."
-  (
-  cd "$STACKGRES_PATH/install/helm"
-  shell build-helm-packages.sh
-  shell build-helm-templates.sh
-  )
+  sh stackgres-k8s/ci/build/build.sh helm-packages helm-templates
 }
 
 create_operator_certificate() {

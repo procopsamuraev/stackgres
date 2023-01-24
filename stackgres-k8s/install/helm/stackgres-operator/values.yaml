@@ -82,6 +82,19 @@ collector:
     annotations: {}
   service:
     annotations: {}
+    spec:
+      type: ClusterIP
+      selector:
+        app: {{ .Values.collector.name }}
+      ports:
+        - name: prometheus-exporter-https
+          protocol: TCP
+          port: 9464
+          targetPort: prometheus-exporter-https
+  ports:
+  - containerPort: 9464
+    name: "prometheus-exporter-https"
+    protocol: "TCP"
   tolerations: {}
   volumeMounts: []
   volumes: []
@@ -90,6 +103,15 @@ collector:
   exporters:
     logging:
       verbosity: detailed
+    prometheus:
+      endpoint: "0.0.0.0:9464"
+      compression: zstd
+      namespace: stackgres-collector
+      send_timestamps: true
+      metric_expiration: 180m
+      enable_open_metrics: false
+      resource_to_telemetry_conversion:
+        enabled: false
   service:
     telemetry:
       logs:
@@ -97,10 +119,12 @@ collector:
     extensions: []
     pipelines:
       metrics:
-        receivers: [prometheus]
+        receivers:
+        - prometheus
         processors:
         exporters:
-          - logging
+        - logging
+        - prometheus
 
 serviceAccount:
   create: true

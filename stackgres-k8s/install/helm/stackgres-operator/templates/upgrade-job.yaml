@@ -1,0 +1,46 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "{{ .Release.Name }}-upgrade"
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: stackgres-operator
+    scope: init
+    job: upgrade
+  annotations:
+    "helm.sh/hook": pre-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "1"
+spec:
+  template:
+    metadata:
+      labels:
+        app: stackgres-operator
+        scope: init
+        job: upgrade
+    spec:
+      serviceAccountName: {{ .Release.Name }}-init
+      containers:
+      - name: "{{ .Release.Name }}-upgrade"
+        image: {{ template "kubectl.image" . }}
+        imagePullPolicy: "IfNotPresent"
+        command:
+          - "/bin/bash"
+          - "-ecx"
+          - |
+            kubectl get sgcluster -A --template '{{ "{{ range .items }}{{ printf \"%s:%s\\n\" .metadata.namespace .metadata.name }}{{ end }}" }}' \
+              | while read CLUSTER
+                do
+                  OPERATOR_VERSION="$(kubectl get sgcluster -n "${CLUSTER%:*}" "${CLUSTER#*:}" \
+                    --template '{{ "{{" }} index .metadata.annotations "stackgres.io/operatorVersion" {{ "}}" }}')"
+                  if echo "$OPERATOR_VERSION" | grep -q '^1\.[34]'
+                  then
+                    PROMETHEUS_MONITORS="$(kubectl get podmonitor,servicemonitor -A -o name \
+                      -l "app=StackGresCluster,stackgres.io/cluster-namespace=${CLUSTER#*:},stackgres.io/cluster-name=${CLUSTER#*:}")"
+                    for PROMETHEUS_MONITOR in $PROMETHEUS_MONITORS
+                    do
+                      kubectl delete "$PROMETHEUS_MONITOR"
+                    done
+                  fi
+                done
+      restartPolicy: OnFailure

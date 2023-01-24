@@ -1,0 +1,18 @@
+{{- if .Values.deploy.restapi }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: {{ .Release.Namespace }}
+  name: {{ .Values.collector.name  }}
+  annotations:
+    meta.helm.sh/release-name: {{ .Release.Name }}
+    meta.helm.sh/release-namespace: {{ .Release.Namespace }}
+    {{- with .Values.collector.service.annotations }}
+    {{ toYaml . | nindent 4 }}
+    {{- end }}
+  labels:
+    app.kubernetes.io/managed-by: Helm
+spec:
+  {{ toYaml .Values.collector.service.spec | nindent 2 }}
+{{- end }}

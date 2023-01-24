@@ -56,13 +56,10 @@ spec:
         - /otelcol-contrib
         - --config
         - /etc/otelcol-contrib/config.yaml
+        {{- with .Values.collector.ports }}
         ports:
-        - containerPort: 8080
-          name: "http"
-          protocol: "TCP"
-        - containerPort: 8443
-          name: "https"
-          protocol: "TCP"
+        {{- toYaml . | nindent 10 }}
+        {{- end }}
         livenessProbe:
           httpGet:
             port: 13133

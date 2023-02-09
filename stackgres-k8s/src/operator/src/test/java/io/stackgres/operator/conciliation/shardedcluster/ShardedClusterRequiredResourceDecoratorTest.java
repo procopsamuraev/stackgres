@@ -21,7 +21,6 @@ import io.stackgres.common.crd.sgpooling.StackGresPoolingConfig;
 import io.stackgres.common.crd.sgprofile.StackGresProfile;
 import io.stackgres.common.crd.sgshardedcluster.StackGresShardedCluster;
 import io.stackgres.common.fixture.Fixtures;
-import io.stackgres.operator.common.Prometheus;
 import io.stackgres.operator.conciliation.AbstractRequiredResourceDecoratorTest;
 import io.stackgres.operator.conciliation.RequiredResourceDecorator;
 import io.stackgres.operator.conciliation.cluster.ImmutableStackGresClusterContext;
@@ -70,7 +69,6 @@ class ShardedClusterRequiredResourceDecoratorTest
         .postgresConfig(pgConfig)
         .profile(profile)
         .poolingConfig(pooling)
-        .prometheus(new Prometheus(false, null))
         .build();
   }
 

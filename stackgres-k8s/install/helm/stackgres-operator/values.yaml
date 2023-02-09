@@ -69,7 +69,7 @@ adminui:
 collector:
   name: stackgres-collector
   image:
-    name: "otel/opentelemetry-collector-contrib"
+    name: "docker.io/otel/opentelemetry-collector-contrib"
     tag: "0.66.0"
     pullPolicy: "IfNotPresent"
   controller:
@@ -85,14 +85,14 @@ collector:
     spec:
       type: ClusterIP
       ports:
-        - name: prom-https
+        - name: prom-http
           protocol: TCP
           port: 9464
-          targetPort: prom-https
+          targetPort: prom-http
   ports:
   - containerPort: 9464
-    name: "prom-https"
-    protocol: "TCP"
+    name: prom-http
+    protocol: TCP
   tolerations: {}
   volumeMounts: []
   volumes: []
@@ -104,8 +104,6 @@ collector:
         verbosity: detailed
       prometheus:
         endpoint: "0.0.0.0:9464"
-        compression: zstd
-        namespace: stackgres-collector
         send_timestamps: true
         metric_expiration: 180m
         enable_open_metrics: false
@@ -124,6 +122,27 @@ collector:
           exporters:
           - logging
           - prometheus
+  prometheusOperator:
+    allowDiscovery: true # Will be ignored if monitors is set
+    monitors: # Optional section to configure PodMonitors for specific Prometheus instances
+              # *WARNING*: resources created by this integration that does set
+              #  the metadata namespace to the same as the operator will not
+              #  be removed when removing the helm chart. Changing the namespace
+              #  may require configure the Prometheus CR properly in order to
+              #  discover PodMonitor in such namespace.
+    # - name: # <Prometheus CR name reference> # Required. Will allow to create a PodMonitor in the Prometheus CR namespace that will scrape from the collector Pod pointing by default to the prometheus exporter
+    #   namespace: # <Prometheus CR namespace reference> # Required. Will allow to create a PodMonitor in the Prometheus CR namespace that will scrape from the collector Pod pointing by default to the prometheus exporter
+    #   port: # Indicates the port of the exporter to scrape from that will be configured in the PodMonitor. By default it is 9464
+    #   metadata: # overwrite some PodMonitor metadata
+    #     name:
+    #     namespace: # changing the namespace may require configure the Prometheus CR properly in order to discover PodMonitor in such namespace.
+    #     labels:
+    #     annotations:
+    #     ownerReferences:
+    #   spec: {} # PodMonitor spec that will be overwritten by the operator
+
+reconciliation:
+  period: 60 # By default each 60 seconds the reconciliation cycle is performed
 
 serviceAccount:
   create: true
@@ -137,7 +156,7 @@ rbac:
 deploy:
   operator: true
   restapi: true
-  collector: true
+  collector: false
 
 cert:
   autoapprove: true
@@ -182,9 +201,6 @@ authentication:
   #  credentialsSecretSecretRef:
   #    name: <string>
   #    Key: <string>
-
-prometheus:
-  allowAutobind: true
 
 grafana:
   #Embed an existing grafana by setting grafana.autoEmbed to true

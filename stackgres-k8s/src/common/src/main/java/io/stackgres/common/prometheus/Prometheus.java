@@ -24,8 +24,8 @@ import io.sundr.builder.annotations.Buildable;
 @Version("v1")
 @Kind("Prometheus")
 @Plural("prometheuses")
-public final class PrometheusConfig
-    extends CustomResource<PrometheusConfigSpec, Void>
+public final class Prometheus
+    extends CustomResource<PrometheusSpec, Void>
     implements Namespaced {
 
   private static final long serialVersionUID = 1L;

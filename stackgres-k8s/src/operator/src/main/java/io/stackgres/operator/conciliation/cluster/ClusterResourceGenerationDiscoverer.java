@@ -19,12 +19,12 @@ import io.stackgres.operator.conciliation.ResourceGenerationDiscoverer;
 import io.stackgres.operator.conciliation.ResourceGenerator;
 
 @ApplicationScoped
-public class ResourceGenerationDiscovererImpl
+public class ClusterResourceGenerationDiscoverer
     extends ResourceDiscoverer<ResourceGenerator<StackGresClusterContext>>
     implements ResourceGenerationDiscoverer<StackGresClusterContext> {
 
   @Inject
-  public ResourceGenerationDiscovererImpl(
+  public ClusterResourceGenerationDiscoverer(
       @Any
           Instance<ResourceGenerator<StackGresClusterContext>> instance) {
     init(instance);

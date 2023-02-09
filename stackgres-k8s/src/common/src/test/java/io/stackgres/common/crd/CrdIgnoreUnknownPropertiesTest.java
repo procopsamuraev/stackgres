@@ -8,6 +8,7 @@ package io.stackgres.common.crd;
 import io.stackgres.common.crd.sgbackup.StackGresBackup;
 import io.stackgres.common.crd.sgbackupconfig.StackGresBackupConfig;
 import io.stackgres.common.crd.sgcluster.StackGresCluster;
+import io.stackgres.common.crd.sgconfig.StackGresConfig;
 import io.stackgres.common.crd.sgdbops.StackGresDbOps;
 import io.stackgres.common.crd.sgdistributedlogs.StackGresDistributedLogs;
 import io.stackgres.common.crd.sgobjectstorage.StackGresObjectStorage;
@@ -35,6 +36,7 @@ public class CrdIgnoreUnknownPropertiesTest {
     StackGresObjectStorage.class,
     StackGresScript.class,
     StackGresShardedCluster.class,
+    StackGresConfig.class,
   })
   void crdShouldInoreUnknownProperties(Class<?> resourceClazz) {
     ModelTestUtil.assertJsonInoreUnknownProperties(resourceClazz);

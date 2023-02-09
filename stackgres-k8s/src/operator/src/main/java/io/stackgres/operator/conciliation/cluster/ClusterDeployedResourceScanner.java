@@ -31,7 +31,7 @@ public class ClusterDeployedResourceScanner extends DeployedResourcesScanner<Sta
 
   private final KubernetesClient client;
   private final LabelFactoryForCluster<StackGresCluster> labelFactory;
-  private final boolean prometheusAutobind;
+  private final boolean prometheusAutodiscovery;
 
   @Inject
   public ClusterDeployedResourceScanner(
@@ -40,7 +40,8 @@ public class ClusterDeployedResourceScanner extends DeployedResourcesScanner<Sta
       OperatorPropertyContext operatorContext) {
     this.client = client;
     this.labelFactory = labelFactory;
-    this.prometheusAutobind = operatorContext.getBoolean(OperatorProperty.PROMETHEUS_AUTOBIND);
+    this.prometheusAutodiscovery = operatorContext.getBoolean(
+        OperatorProperty.PROMETHEUS_AUTODISCOVERY);
   }
 
   @Override
@@ -72,7 +73,7 @@ public class ClusterDeployedResourceScanner extends DeployedResourcesScanner<Sta
           ? extends KubernetesResourceList<? extends HasMetadata>,
               ? extends Resource<? extends HasMetadata>>>> getInAnyNamespaceResourceOperations(
                   StackGresCluster cluster) {
-    if (prometheusAutobind && Optional.of(cluster)
+    if (prometheusAutodiscovery && Optional.of(cluster)
         .map(StackGresCluster::getSpec)
         .map(StackGresClusterSpec::getPrometheusAutobind)
         .orElse(false)) {

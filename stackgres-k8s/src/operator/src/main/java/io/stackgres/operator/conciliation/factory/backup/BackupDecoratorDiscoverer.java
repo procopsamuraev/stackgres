@@ -18,12 +18,12 @@ import io.stackgres.operator.conciliation.factory.Decorator;
 import io.stackgres.operator.conciliation.factory.DecoratorDiscoverer;
 
 @ApplicationScoped
-public class DecoratorDiscovererImpl
+public class BackupDecoratorDiscoverer
     extends ResourceDiscoverer<Decorator<StackGresBackupContext>>
     implements DecoratorDiscoverer<StackGresBackupContext> {
 
   @Inject
-  public DecoratorDiscovererImpl(
+  public BackupDecoratorDiscoverer(
       @Any Instance<Decorator<StackGresBackupContext>> instance) {
     init(instance);
   }

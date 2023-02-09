@@ -4,6 +4,7 @@ platforms:
 modules:
   parent-java: &parent-java
     type: java
+    platform_dependent: true
     path: stackgres-k8s/src/.
     target_image: registry.access.redhat.com/ubi8-micro:8.7-6
     build_image: &jdk_build_image registry.gitlab.com/ongresinc/stackgres/builder:1.5
@@ -28,11 +29,10 @@ modules:
         -Dsurefire.useFile=false
         -DtrimStackTrace=false
     build_commands:
-      - 'stackgres-k8s/src/mvnw $MAVEN_CLI_OPTS clean install -P safer -f "$MODULE_PATH/pom.xml" -N'
+      - 'stackgres-k8s/src/mvnw $MAVEN_CLI_OPTS clean install -D skipTests -f "$MODULE_PATH/pom.xml" -N'
     cache:
       - .m2/
     artifacts:
-      - stackgres-k8s/src/target
       - .m2/repository/io/stackgres/stackgres-parent
   operator-framework-java: &operator-framework-java
     <<: *parent-java
@@ -42,6 +42,7 @@ modules:
       - sh stackgres-k8s/ci/build/redact-version.sh operator-framework
     sources:
       - stackgres-k8s/src/operator-framework/src/main
+      - stackgres-k8s/src/operator-framework/src/test
     artifacts:
       - stackgres-k8s/src/operator-framework/target
       - .m2/repository/io/stackgres/stackgres-operator-framework
@@ -62,6 +63,7 @@ modules:
       - sh stackgres-k8s/ci/build/redact-version.sh common
     sources:
       - stackgres-k8s/src/common/src/main
+      - stackgres-k8s/src/common/src/test
     artifacts:
       - stackgres-k8s/src/common/target
       - .m2/repository/io/stackgres/stackgres-common
@@ -72,6 +74,7 @@ modules:
       - sh stackgres-k8s/ci/build/redact-version.sh operator
     sources:
       - stackgres-k8s/src/operator/src/main
+      - stackgres-k8s/src/operator/src/test
     artifacts:
       - stackgres-k8s/src/operator/target
       - .m2/repository/io/stackgres/stackgres-operator
@@ -82,6 +85,7 @@ modules:
       - sh stackgres-k8s/ci/build/redact-version.sh api-web
     sources:
       - stackgres-k8s/src/api-web/src/main
+      - stackgres-k8s/src/api-web/src/test
     post_build_commands:
       - 'sh $SHELL_XTRACE stackgres-k8s/src/api-web/src/main/swagger/build.sh'
     artifacts:
@@ -94,6 +98,7 @@ modules:
       - sh stackgres-k8s/ci/build/redact-version.sh jobs
     sources:
       - stackgres-k8s/src/jobs/src/main
+      - stackgres-k8s/src/jobs/src/test
     artifacts:
       - stackgres-k8s/src/jobs/target
       - .m2/repository/io/stackgres/stackgres-jobs
@@ -104,6 +109,7 @@ modules:
       - sh stackgres-k8s/ci/build/redact-version.sh cluster-controller
     sources:
       - stackgres-k8s/src/cluster-controller/src/main
+      - stackgres-k8s/src/cluster-controller/src/test
     artifacts:
       - stackgres-k8s/src/cluster-controller/target
       - .m2/repository/io/stackgres/stackgres-cluster-controller
@@ -114,11 +120,13 @@ modules:
       - sh stackgres-k8s/ci/build/redact-version.sh distributedlogs-controller
     sources:
       - stackgres-k8s/src/distributedlogs-controller/src/main
+      - stackgres-k8s/src/distributedlogs-controller/src/test
     artifacts:
       - stackgres-k8s/src/distributedlogs-controller/target
       - .m2/repository/io/stackgres/stackgres-distributedlogs-controller
   admin-ui:
     type: ui
+    platform_dependent: true
     path: stackgres-k8s/src/admin-ui
     target_image: registry.access.redhat.com/ubi8-micro:8.7-6
     build_image: registry.access.redhat.com/ubi8/nodejs-16:1-90

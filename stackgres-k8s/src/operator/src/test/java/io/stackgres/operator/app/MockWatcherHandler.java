@@ -11,17 +11,16 @@ import io.quarkus.test.Mock;
 
 @Mock
 @ApplicationScoped
-public class MockWatcherHandler implements OperatorWatcherHandler {
+public class MockWatcherHandler implements WatcherHandler {
 
   @Override
   public void startWatchers() {
     //For integration testing purposes we don't need watchers
-
   }
 
   @Override
   public void stopWatchers() {
     //Do nothing
-
   }
+
 }

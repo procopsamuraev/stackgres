@@ -19,12 +19,12 @@ import io.stackgres.operator.conciliation.factory.Decorator;
 import io.stackgres.operator.conciliation.factory.DecoratorDiscoverer;
 
 @ApplicationScoped
-public class DecoratorDiscovererImpl
+public class ClusterDecoratorDiscoverer
     extends ResourceDiscoverer<Decorator<StackGresClusterContext>>
     implements DecoratorDiscoverer<StackGresClusterContext> {
 
   @Inject
-  public DecoratorDiscovererImpl(
+  public ClusterDecoratorDiscoverer(
       @Any Instance<Decorator<StackGresClusterContext>> instance) {
     init(instance);
   }

@@ -23,7 +23,7 @@ public class StackGresOperatorApp {
   private static final Logger LOGGER = LoggerFactory.getLogger(StackGresOperatorApp.class);
 
   private OperatorPropertyContext operatorPropertyContext;
-  private OperatorWatcherHandler operatorWatchersHandler;
+  private WatcherHandler operatorWatchersHandler;
   private ReconciliationClock reconciliationClock;
   private OperatorBootstrap operatorBootstrap;
 
@@ -50,7 +50,7 @@ public class StackGresOperatorApp {
   }
 
   @Inject
-  public void setOperatorWatchersHandler(OperatorWatcherHandler operatorWatchersHandler) {
+  public void setOperatorWatchersHandler(WatcherHandler operatorWatchersHandler) {
     this.operatorWatchersHandler = operatorWatchersHandler;
   }
 

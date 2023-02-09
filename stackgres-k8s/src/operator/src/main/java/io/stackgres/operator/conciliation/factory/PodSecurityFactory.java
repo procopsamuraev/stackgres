@@ -24,11 +24,19 @@ public abstract class PodSecurityFactory {
         .withRunAsNonRoot(true);
     if (!operatorContext.getBoolean(OperatorProperty.USE_ARBITRARY_USER)) {
       podSecurityContextBuilder
-          .withRunAsUser(USER)
-          .withRunAsGroup(GROUP)
-          .withFsGroup(GROUP);
+          .withRunAsUser(getUser())
+          .withRunAsGroup(getGroup())
+          .withFsGroup(getGroup());
     }
     return podSecurityContextBuilder.build();
+  }
+
+  protected Long getUser() {
+    return USER;
+  }
+
+  protected Long getGroup() {
+    return GROUP;
   }
 
   @Inject

@@ -21,7 +21,6 @@ import io.stackgres.common.crd.sgpgconfig.StackGresPostgresConfig;
 import io.stackgres.common.crd.sgpooling.StackGresPoolingConfig;
 import io.stackgres.common.crd.sgprofile.StackGresProfile;
 import io.stackgres.common.fixture.Fixtures;
-import io.stackgres.operator.common.Prometheus;
 import io.stackgres.operator.conciliation.AbstractRequiredResourceDecoratorTest;
 import io.stackgres.operator.conciliation.RequiredResourceDecorator;
 import org.junit.jupiter.api.BeforeEach;
@@ -64,7 +63,6 @@ class ClusterRequiredResourceDecoratorTest
         .profile(profile)
         .backupConfig(backupConfig)
         .poolingConfig(pooling)
-        .prometheus(new Prometheus(false, null))
         .databaseSecret(secret)
         .build();
   }

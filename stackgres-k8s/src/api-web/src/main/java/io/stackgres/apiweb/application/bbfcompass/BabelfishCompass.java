@@ -79,8 +79,7 @@ public class BabelfishCompass extends SgApplication {
         + StringUtil.generateRandom(16).toLowerCase(Locale.ROOT));
 
     Job compassJob = client.batch().v1().jobs().inNamespace(namespace)
-        .withName(name)
-        .create(new JobBuilder()
+        .resource(new JobBuilder()
             .withNewMetadata()
             .withName(name)
             .endMetadata()
@@ -118,7 +117,8 @@ public class BabelfishCompass extends SgApplication {
             .endSpec()
             .endTemplate()
             .endSpec()
-            .build());
+            .build())
+        .create();
 
     Pod pod = waitForPod(namespace, name);
 

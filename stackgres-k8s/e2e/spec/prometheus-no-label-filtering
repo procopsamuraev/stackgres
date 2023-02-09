@@ -7,6 +7,10 @@ e2e_test_extra_hash() {
     "$(realpath --relative-to "$PROJECT_PATH" "$SPEC_PATH/abstract/prometheus-integration")"
 }
 
+e2e_exclusive_lock() {
+  true
+}
+
 e2e_test_install() {
   k8s_cleanup_namespace "$OPERATOR_NAMESPACE"
   k8s_async_cleanup

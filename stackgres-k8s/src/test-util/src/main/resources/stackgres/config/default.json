@@ -1,0 +1,221 @@
+{
+  "apiVersion": "stackgres.io/v1",
+  "kind": "SGOperatorConfig",
+  "metadata": {
+    "name": "stackgres-operator",
+    "namespace": "stackgres",
+    "uid": "6fe0edf5-8a6d-43b7-99bd-131e2efeab66"
+  },
+  "spec": {
+    "containerRegistry": "docker.io",
+    "imagePullPolicy": "IfNotPresent",
+    "operator": {
+      "image": {
+        "name": "stackgres/operator",
+        "tag": "main-jvm",
+        "pullPolicy": "IfNotPresent"
+      },
+      "annotations": {},
+      "affinity": {},
+      "nodeSelector": {},
+      "serviceAccount": {
+        "annotations": {}
+      },
+      "service": {
+        "annotations": {}
+      },
+      "tolerations": [],
+      "resources": {}
+    },
+    "restapi": {
+      "name": "stackgres-restapi",
+      "image": {
+        "name": "stackgres/restapi",
+        "tag": "main-jvm",
+        "pullPolicy": "IfNotPresent"
+      },
+      "resources": {},
+      "affinity": {},
+      "annotations": {},
+      "nodeSelector": {},
+      "serviceAccount": {
+        "annotations": {}
+      },
+      "service": {
+        "annotations": {}
+      },
+      "tolerations": []
+    },
+    "jobs": {
+      "name": "stackgres-jobs",
+      "image": {
+        "name": "stackgres/jobs",
+        "tag": "main-jvm",
+        "pullPolicy": "IfNotPresent"
+      },
+      "resources": {},
+      "annotations": {},
+      "tolerations": [],
+      "nodeSelector": {},
+      "affinity": {}
+    },
+    "adminui": {
+      "name": "stackgres-adminui",
+      "image": {
+        "name": "stackgres/admin-ui",
+        "tag": "main",
+        "pullPolicy": "IfNotPresent"
+      },
+      "resources": {},
+      "service": {
+        "exposeHTTP": false,
+        "type": "ClusterIP"
+      }
+    },
+    "collector": {
+      "name": "stackgres-collector",
+      "image": {
+        "name": "otel/opentelemetry-collector-contrib",
+        "tag": "0.66.0",
+        "pullPolicy": "IfNotPresent"
+      },
+      "controller": {
+        "resources": {}
+      },
+      "resources": {},
+      "affinity": {},
+      "annotations": {},
+      "nodeSelector": {},
+      "serviceAccount": {
+        "annotations": {}
+      },
+      "service": {
+        "annotations": {},
+        "spec": {
+          "type": "ClusterIP",
+          "ports": [
+            {
+              "name": "prom-https",
+              "protocol": "TCP",
+              "port": 9464,
+              "targetPort": "prom-https"
+            }
+          ]
+        }
+      },
+      "ports": [
+        {
+          "containerPort": 9464,
+          "name": "prom-https",
+          "protocol": "TCP"
+        }
+      ],
+      "tolerations": {},
+      "volumeMounts": [],
+      "volumes": [],
+      "config": {
+        "extensions": {},
+        "processors": {},
+        "exporters": {
+          "logging": {
+            "verbosity": "detailed"
+          },
+          "prometheus": {
+            "endpoint": "0.0.0.0:9464",
+            "namespace": "stackgres",
+            "send_timestamps": true,
+            "metric_expiration": "180m",
+            "enable_open_metrics": false,
+            "resource_to_telemetry_conversion": {
+              "enabled": false
+            }
+          }
+        },
+        "service": {
+          "telemetry": {
+            "logs": {
+              "level": "debug"
+            }
+          },
+          "extensions": [],
+          "pipelines": {
+            "metrics": {
+              "receivers": [
+                "prometheus"
+              ],
+              "processors": null,
+              "exporters": [
+                "logging",
+                "prometheus"
+              ]
+            }
+          }
+        }
+      },
+      "prometheusOperator": {
+        "allowDiscovery": true,
+        "monitors": null
+      }
+    },
+    "reconciliation": {
+      "period": 60
+    },
+    "serviceAccount": {
+      "create": true
+    },
+    "initClusterRole": "cluster-admin",
+    "rbac": {
+      "create": true
+    },
+    "deploy": {
+      "operator": true,
+      "restapi": true,
+      "collector": true
+    },
+    "cert": {
+      "autoapprove": true,
+      "createForOperator": true,
+      "createForWebApi": true,
+      "createForCollector": true,
+      "resetCerts": false,
+      "certManager": {
+        "autoConfigure": false,
+        "duration": "2160h",
+        "renewBefore": "360h",
+        "encoding": "PKCS1",
+        "size": 2048
+      }
+    },
+    "authentication": {
+      "type": "jwt",
+      "user": "admin",
+      "resetPassword": false,
+      "secretRef": {
+        "name": ""
+      },
+      "oidc": {}
+    },
+    "grafana": {
+      "autoEmbed": false,
+      "user": "admin",
+      "password": "prom-operator",
+      "schema": "http",
+      "datasourceName": "Prometheus"
+    },
+    "developer": {},
+    "extensions": {
+      "repositoryUrls": [
+        "https://extensions.stackgres.io/postgres/repository"
+      ],
+      "cache": {
+        "enabled": false,
+        "preloadedExtensions": [
+          "x86_64/linux/timescaledb-1\\.7\\.4-pg12"
+        ],
+        "persistentVolume": {
+          "size": "1Gi"
+        }
+      }
+    }
+  }
+}

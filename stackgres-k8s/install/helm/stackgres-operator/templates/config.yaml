@@ -1,0 +1,18 @@
+apiVersion: stackgres.io/v1
+kind: SGConfig
+metadata:
+  name: "{{ .Release.Name }}"
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: stackgres-operator
+    scope: config
+  {{- if .Release.IsInstall }}
+    app.kubernetes.io/managed-by: "Helm"
+  annotations:
+    "helm.sh/hook": post-install
+    "meta.helm.sh/release-name": {{ .Release.Name }}
+    "meta.helm.sh/release-namespace": {{ .Release.Namespace }}
+    "helm.sh/hook-weight": "45"
+  {{- end }}
+spec:
+  {{ toYaml .Values | nindent 2 }}

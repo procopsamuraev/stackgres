@@ -20,9 +20,18 @@ import io.sundr.builder.annotations.Buildable;
 @Buildable(editableEnabled = false, validationEnabled = false, lazyCollectionInitEnabled = false)
 public class PodMonitorSpec {
 
+  private String jobName;
   private LabelSelector selector;
   private NamespaceSelector namespaceSelector;
   private List<Endpoint> podMetricsEndpoints;
+
+  public String getJobName() {
+    return jobName;
+  }
+
+  public void setJobName(String jobName) {
+    this.jobName = jobName;
+  }
 
   public LabelSelector getSelector() {
     return selector;

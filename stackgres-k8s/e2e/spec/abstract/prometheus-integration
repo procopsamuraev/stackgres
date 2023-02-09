@@ -1,20 +1,15 @@
 #!/bin/sh
 
-e2e_exclusive_lock() {
-  true
-}
-
-e2e_test() {
-  run_test "Check that exporter pod monitor was created" check_exporter_pod_monitor
-  run_test "Check that envoy pod monitor was created" check_envoy_pod_monitor
-  run_test "Check that grafana is embedded" check_grafana_embedded
-  run_test "Check that grafana secret is used" check_grafana_secret
-}
-
 e2e_test_uninstall() {
   helm_cleanup_chart "$CLUSTER_NAME" "$CLUSTER_NAMESPACE"
   k8s_async_cleanup_namespace "$CLUSTER_NAMESPACE"
   uninstall_prometheus_operator
+}
+
+e2e_test() {
+  run_test "Check that gate controller pod monitor was created" check_gate_controller_pod_monitor
+  run_test "Check that grafana is embedded" check_grafana_embedded
+  run_test "Check that grafana secret is used" check_grafana_secret
 }
 
 check_grafana_secret() {
@@ -35,14 +30,14 @@ check_grafana_secret() {
   fi
 }
 
-check_exporter_pod_monitor() {
-  local SERVICE_MONITOR="$CLUSTER_NAMESPACE-$CLUSTER_NAME-stackgres-postgres-exporter"
+check_gate_controller_pod_monitor() {
+  local POD_MONITOR="stackgres-operator"
 
-  if wait_until kubectl get podmonitors.monitoring.coreos.com -n "$(prometheus_namespace)" "$SERVICE_MONITOR"
+  if wait_until kubectl get podmonitors.monitoring.coreos.com -n "$(prometheus_namespace)" "$POD_MONITOR"
   then
-    echo "Exporter pod monitor was created"
+    echo "Gate controller pod monitor was created"
   else
-    echo "Exporter pod monitor wasn't created"
+    echo "Gate controller pod monitor wasn't created"
     return 1
   fi
 
@@ -50,9 +45,9 @@ check_exporter_pod_monitor() {
     -- curl -s -f 'http://$(prometheus_service).$(prometheus_namespace):9090/api/v1/query?query=pg_settings_shared_buffers_bytes' \
     | jq -r '.data.result | length')\" -gt 0 ]"
   then
-    echo "Exporter metric pg_settings_shared_buffers_bytes was found on prometheus"
+    echo "Gate controller metric pg_settings_shared_buffers_bytes was found on prometheus"
   else
-    echo "Exporter metric pg_settings_shared_buffers_bytes wasn't found on prometheus"
+    echo "Gate controller metric pg_settings_shared_buffers_bytes wasn't found on prometheus"
     return 1
   fi
 
@@ -60,30 +55,18 @@ check_exporter_pod_monitor() {
     -- curl -s -f 'http://$(prometheus_service).$(prometheus_namespace):9090/api/v1/query?query=pg_stat_activity_count' \
     | jq -r '.data.result | length')\" -gt 0 ]"
   then
-    echo "Exporter metric pg_stat_activity_count was found on prometheus"
+    echo "Gate controller metric pg_stat_activity_count was found on prometheus"
   else
-    echo "Exporter metric pg_stat_activity_count wasn't found on prometheus"
-    return 1
-  fi
-}
-
-check_envoy_pod_monitor() {
-  local SERVICE_MONITOR="$CLUSTER_NAMESPACE-$CLUSTER_NAME-stackgres-envoy"
-
-  if wait_until kubectl get podmonitors.monitoring.coreos.com -n "$(prometheus_namespace)" "$SERVICE_MONITOR"
-  then
-    echo "Envoy pod monitor was created"
-  else
-    echo "Envoy pod monitor wasn't created"
+    echo "Gate controller metric pg_stat_activity_count wasn't found on prometheus"
     return 1
   fi
 
   if wait_until kubectl exec -i -n "$CLUSTER_NAMESPACE" curl -- \
     curl "http://$(prometheus_service).$(prometheus_namespace):9090/api/v1/query?query=envoy_cluster_upstream_cx_rx_bytes_total"
   then
-    echo "Envoy metrics was found on prometheus"
+    echo "Gate controller metrics was found on prometheus"
   else
-    echo "Envoy metrics wasn't found on prometheus"
+    echo "Gate controller metrics wasn't found on prometheus"
     return 1
   fi
 }
@@ -107,7 +90,7 @@ check_grafana_embedded() {
     return 1
   fi
 
-  if wait_until eval 'kubectl exec -i -n "$CLUSTER_NAMESPACE" curl -- curl -s -k "$GRAFANA_URL" --fail | grep -q "\(<grafana-app \|<title>Grafana</title>\)"'
+  if wait_until eval 'kubectl exec -i -n "$CLUSTER_NAMESPACE" curl -- curl -s -k "$GRAFANA_URL" --fail | grep -q "<title>Grafana</title>"'
   then
     echo "SUCCESS. Grafana URL $GRAFANA_URL is returning grafana Web"
   else

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-package io.stackgres.operator.conciliation.dbops;
+package io.stackgres.operator.conciliation.distributedlogs;
 
 import java.util.List;
 
@@ -17,20 +17,20 @@ import io.stackgres.operator.conciliation.ResourceGenerationDiscoverer;
 import io.stackgres.operator.conciliation.ResourceGenerator;
 
 @ApplicationScoped
-public class ResourceGenerationDiscovererImpl
-    extends ResourceDiscoverer<ResourceGenerator<StackGresDbOpsContext>>
-    implements ResourceGenerationDiscoverer<StackGresDbOpsContext> {
+public class DistributedLogsResourceGenerationDiscoverer
+    extends ResourceDiscoverer<ResourceGenerator<StackGresDistributedLogsContext>>
+    implements ResourceGenerationDiscoverer<StackGresDistributedLogsContext> {
 
   @Inject
-  public ResourceGenerationDiscovererImpl(
+  public DistributedLogsResourceGenerationDiscoverer(
       @Any
-          Instance<ResourceGenerator<StackGresDbOpsContext>> instance) {
+          Instance<ResourceGenerator<StackGresDistributedLogsContext>> instance) {
     init(instance);
   }
 
   @Override
-  public List<ResourceGenerator<StackGresDbOpsContext>> getResourceGenerators(
-      StackGresDbOpsContext context) {
+  public List<ResourceGenerator<StackGresDistributedLogsContext>> getResourceGenerators(
+      StackGresDistributedLogsContext context) {
     return resourceHub.get(context.getVersion());
   }
 }

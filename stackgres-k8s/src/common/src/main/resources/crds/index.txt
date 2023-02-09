@@ -9,3 +9,4 @@ SGPostgresConfig.yaml
 SGObjectStorage.yaml
 SGScript.yaml
 SGShardedCluster.yaml
+SGConfig.yaml

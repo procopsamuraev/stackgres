@@ -9,20 +9,16 @@ import java.util.List;
 
 import io.stackgres.common.prometheus.PrometheusInstallation;
 
-public class Prometheus {
+public class PrometheusInstallations {
 
-  private final Boolean createPodMonitor;
   private final List<PrometheusInstallation> prometheusInstallations;
 
-  public Prometheus(Boolean createPodMonitor,
-      List<PrometheusInstallation> prometheusInstallations) {
-    super();
-    this.createPodMonitor = createPodMonitor;
+  public PrometheusInstallations(List<PrometheusInstallation> prometheusInstallations) {
     this.prometheusInstallations = prometheusInstallations;
   }
 
-  public Boolean getCreatePodMonitor() {
-    return createPodMonitor;
+  public boolean getCreatePodMonitor() {
+    return !prometheusInstallations.isEmpty();
   }
 
   public List<PrometheusInstallation> getPrometheusInstallations() {

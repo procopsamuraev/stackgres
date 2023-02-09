@@ -18,6 +18,7 @@ import io.stackgres.common.fixture.distributedlogs.DistributedLogsListFixture;
 import io.stackgres.common.fixture.instanceprofile.InstanceProfileFixture;
 import io.stackgres.common.fixture.instanceprofile.InstanceProfileListFixture;
 import io.stackgres.common.fixture.objectstorage.ObjectStorageFixture;
+import io.stackgres.common.fixture.operatorconfig.ConfigFixture;
 import io.stackgres.common.fixture.poolingconfig.JsonPoolingConfigFixture;
 import io.stackgres.common.fixture.poolingconfig.PoolingConfigFixture;
 import io.stackgres.common.fixture.poolingconfig.PoolingConfigListFixture;
@@ -105,6 +106,10 @@ public interface Fixtures {
 
   static ShardedClusterListFixture shardedClusterList() {
     return new ShardedClusterListFixture();
+  }
+
+  static ConfigFixture config() {
+    return new ConfigFixture();
   }
 
   static ExtensionMetadataFixture extensionMetadata() {

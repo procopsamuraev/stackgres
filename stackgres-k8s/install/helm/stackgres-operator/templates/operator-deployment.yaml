@@ -77,8 +77,17 @@ spec:
                 fieldPath: metadata.namespace
           - name: OPERATOR_IMAGE_VERSION
             value: "{{ .Values.operator.image.tag }}"
-          - name: PROMETHEUS_AUTOBIND
-            value: "{{ .Values.prometheus.allowAutobind }}"
+          - name: PROMETHEUS_AUTODISCOVERY
+            value: "{{ .Values.collector.prometheusOperator.allowDiscovery }}"
+          {{- with .Values.reconciliation.period }}
+          - name: RECONCILIATION_PERIOD
+            value: "{{ . }}"
+          {{- end }}
+          {{- with .Values.collector.prometheusOperator.monitors }}
+          - name: PROMETHEUS_MONITORS
+            value: |
+              "{{ toJson . }}"
+          {{- end }}
           {{- if and (.Capabilities.APIVersions.Has "project.openshift.io/v1") (not .Values.developer.disableArbitraryUser) }}
           - name: USE_ARBITRARY_USER
             value: "true"

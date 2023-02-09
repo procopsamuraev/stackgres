@@ -1,4 +1,4 @@
-build:
+.build:
   image: $CI_REGISTRY/$CI_PROJECT_PATH/$SG_CI_IMAGE_NAME
   stage: build 1
   tags:
@@ -10,18 +10,29 @@ build:
       sh stackgres-k8s/ci/build/build-gitlab.sh build \
         --copy stackgres-k8s/ci/build/target/junit-build.hashes.xml \
         --copy .m2 \
-        --extract operator-framework-java:'stackgres-k8s/src/operator-framework/target/surefire-reports/TEST-*.xml' \
-        --extract common-java:'stackgres-k8s/src/common/target/surefire-reports/TEST-*.xml' \
-        --extract operator-java:'stackgres-k8s/src/operator/target/surefire-reports/TEST-*.xml' \
-        --extract restapi-java:'stackgres-k8s/src/api-web/target/surefire-reports/TEST-*.xml' \
-        --extract jobs-java:'stackgres-k8s/src/jobs/target/surefire-reports/TEST-*.xml' \
-        --extract cluster-controller-java:'stackgres-k8s/src/cluster-controller/target/surefire-reports/TEST-*.xml' \
-        --extract distributedlogs-controller-java:'stackgres-k8s/src/distributedlogs-controller/target/surefire-reports/TEST-*.xml' \
         --extract restapi-java:'stackgres-k8s/src/api-web/target/swagger*' \
         parent-java operator-framework-java \
         test-util-java common-java \
         operator-java restapi-java jobs-java \
         cluster-controller-java distributedlogs-controller-java
+      MAVEN_OPTS='
+        -Dhttps.protocols=TLSv1.2
+        -Dorg.slf4j.simpleLogger.showDateTime=true
+        -Djava.awt.headless=true
+        -XX:+UseParallelGC
+        '
+      MAVEN_CLI_OPTS='
+        --batch-mode
+        --errors
+        --show-version
+        -Dmaven.repo.local=/project/.m2/repository
+        -Dmaven.user.home=/project/.m2
+        -DinstallAtEnd=true
+        -DdeployAtEnd=true
+        -Dsurefire.useFile=false
+        -DtrimStackTrace=false
+        '
+      sh stackgres-k8s/src/mvnw $MAVEN_CLI_OPTS install -P safer -f "stackgres-k8s/src/pom.xml"
   retry:
     max: 2
     when: [ unknown_failure, api_failure, stuck_or_timeout_failure, runner_system_failure, runner_unsupported,
@@ -44,13 +55,29 @@ build:
         - stackgres-k8s/src/api-web/target/swagger*
         - stackgres-k8s/ci/build/target
 
-build ui:
+build amd64:
+  extends: .build
+  tags:
+    - stackgres-runner-v2
+    - stackgres-maven-runner
+    - linux-amd64
+
+build arm64:
+  extends: .build
+  tags:
+    - stackgres-runner-v2
+    - stackgres-maven-runner
+    - linux-arm64
+  only:
+    variables:
+      - $SKIP_ARM != "true" && $CI_COMMIT_TAG && $CI_COMMIT_TAG !~ /^latest-.*$/
+      - $DO_ARM
+
+.build ui:
   image: $CI_REGISTRY/$CI_PROJECT_PATH/$SG_CI_IMAGE_NAME
   stage: build 2
   tags:
     - stackgres-runner
-  dependencies:
-    - build
   script:
     - |
       sh stackgres-k8s/ci/build/build-gitlab.sh build \
@@ -62,13 +89,33 @@ build ui:
       paths:
       - stackgres-k8s/src/admin-ui/node_modules
 
+build ui amd64:
+  extends: .build ui
+  dependencies:
+    - build amd64
+  tags:
+    - stackgres-runner
+    - linux-amd64
+
+build ui arm64:
+  extends: .build ui
+  dependencies:
+    - build arm64
+  tags:
+    - stackgres-runner
+    - linux-arm64
+  only:
+    variables:
+      - $SKIP_ARM != "true" && $CI_COMMIT_TAG && $CI_COMMIT_TAG !~ /^latest-.*$/
+      - $DO_ARM
+
 build documentation:
   image: $CI_REGISTRY/$CI_PROJECT_PATH/$SG_CI_IMAGE_NAME
   stage: build 2
   tags:
     - stackgres-runner
   dependencies:
-    - build
+    - build amd64
   script:
     - |
       [ "$DEBUG" != true ] || set -x
@@ -98,7 +145,7 @@ build helm packages:
   tags:
     - stackgres-runner
   dependencies:
-    - build
+    - build amd64
   script:
     - |
       sh stackgres-k8s/ci/build/build-gitlab.sh build \
@@ -117,7 +164,7 @@ build helm templates:
   tags:
     - stackgres-runner
   dependencies:
-    - build
+    - build amd64
   script:
     - |
       sh stackgres-k8s/ci/build/build-gitlab.sh build \
@@ -136,7 +183,7 @@ build helm release packages:
   tags:
     - stackgres-runner
   dependencies:
-    - build
+    - build amd64
   script:
     - |
       sh stackgres-k8s/ci/build/build-gitlab.sh build \
@@ -155,7 +202,7 @@ build helm release templates:
   tags:
     - stackgres-runner
   dependencies:
-    - build
+    - build amd64
   script:
     - |
       sh stackgres-k8s/ci/build/build-gitlab.sh build \

@@ -1,4 +1,4 @@
-{{- if .Values.deploy.restapi }}
+{{- if .Values.deploy.collector }}
 ---
 apiVersion: v1
 kind: Service

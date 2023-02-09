@@ -15,7 +15,7 @@ import io.sundr.builder.annotations.Buildable;
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Buildable(editableEnabled = false, validationEnabled = false, lazyCollectionInitEnabled = false)
-public class PrometheusConfigSpec {
+public class PrometheusSpec {
 
   private LabelSelector podMonitorSelector;
 

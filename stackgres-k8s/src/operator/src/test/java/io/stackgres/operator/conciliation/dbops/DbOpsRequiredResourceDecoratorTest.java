@@ -52,7 +52,7 @@ class DbOpsRequiredResourceDecoratorTest
   }
 
   @Override
-  public void assertThatResourceNameIsComplaint(HasMetadata resource) {
+  public void assertThatResourceNameIsCompliant(HasMetadata resource) {
     ResourceUtil.nameIsValidService(resource.getMetadata().getName());
   }
 

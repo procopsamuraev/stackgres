@@ -68,7 +68,6 @@ import org.slf4j.LoggerFactory;
 public class Envoy implements ContainerFactory<ClusterContainerContext>,
     VolumeFactory<StackGresClusterContext> {
 
-  public static final String POD_MONITOR = "-stackgres-envoy";
   public static final String SERVICE = "-envoyexp";
 
   private static final String CONFIG_SUFFIX = "-envoy-config";
@@ -110,12 +109,6 @@ public class Envoy implements ContainerFactory<ClusterContainerContext>,
   public static String serviceName(StackGresClusterContext clusterContext) {
     String name = clusterContext.getSource().getMetadata().getName();
     return ResourceUtil.resourceName(name + SERVICE);
-  }
-
-  public static String podMonitorName(StackGresClusterContext clusterContext) {
-    String namespace = clusterContext.getSource().getMetadata().getNamespace();
-    String name = clusterContext.getSource().getMetadata().getName();
-    return ResourceUtil.resourceName(namespace + "-" + name + POD_MONITOR);
   }
 
   @Override

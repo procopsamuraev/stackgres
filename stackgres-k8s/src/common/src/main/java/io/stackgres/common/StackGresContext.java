@@ -44,6 +44,12 @@ public interface StackGresContext {
   String SHARDEDCLUSTER_NAMESPACE_KEY = "shardedcluster-namespace";
   String COORDINATOR_KEY = "coordinator";
   String SHARDS_KEY = "shards";
+  String CONFIG_APP_NAME = "StackGresConfig";
+  String CONFIG_NAME_KEY = "config-name";
+  String CONFIG_UID_KEY = "config-uid";
+  String CONFIG_NAMESPACE_KEY = "config-namespace";
+  String CONFIG_KEY = "config";
+  String GATE_COLLECTOR_KEY = "gate-collector";
 
   String REST_APIUSER_KEY = "apiUsername";
   String REST_K8SUSER_KEY = "k8sUsername";
@@ -65,6 +71,7 @@ public interface StackGresContext {
   String FLUENTBIT_VERSION_KEY = STACKGRES_KEY_PREFIX + "fluentbit-version";
   String FLUENTD_VERSION_KEY = STACKGRES_KEY_PREFIX + "fluentd-version";
   String CONTAINER_KEY = STACKGRES_KEY_PREFIX + "container";
+  String CONFIG_HASH_KEY = STACKGRES_KEY_PREFIX + "config-hash";
   ImmutableMap<String, String> ANNOTATIONS_TO_COMPONENT =
       ImmutableMap.<String, String>builder()
       .put(CLUSTER_CONTROLLER_VERSION_KEY, "cluster-controller")

@@ -39,7 +39,6 @@ import io.stackgres.common.resource.ProfileConfigFinder;
 import io.stackgres.common.resource.SecretFinder;
 import io.stackgres.operator.conciliation.factory.cluster.patroni.parameters.PostgresDefaultValues;
 import io.stackgres.operator.conciliation.factory.cluster.sidecars.pooling.parameters.PgBouncerDefaultValues;
-import io.stackgres.operator.resource.PrometheusScanner;
 import org.junit.jupiter.api.BeforeEach;
 
 abstract class AbstractClusterRequiredResourcesGeneratorTest {
@@ -64,9 +63,6 @@ abstract class AbstractClusterRequiredResourcesGeneratorTest {
 
   @InjectMock
   BackupFinder backupFinder;
-
-  @InjectMock
-  PrometheusScanner prometheusScanner;
 
   @InjectMock
   SecretFinder secretFinder;

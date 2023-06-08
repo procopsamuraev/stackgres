@@ -1442,4 +1442,8 @@ spec:
                                 failure:
                                   type: string
                                   description: If failed, a message of the failure
+                bindingName:
+                  type: string
+                  description: |
+                    Indicates the Secret Resource's name with data entries required for connectivity
 

@@ -53,6 +53,9 @@ public class StackGresClusterStatus {
   @JsonProperty("labelPrefix")
   private String labelPrefix;
 
+  @JsonProperty("bindingName")
+  private String bindingName;
+
   public List<Condition> getConditions() {
     return conditions;
   }
@@ -109,9 +112,18 @@ public class StackGresClusterStatus {
     this.labelPrefix = labelPrefix;
   }
 
+  public String getBindingName() {
+    return bindingName;
+  }
+
+  public void setBindingName(String bindingName) {
+    this.bindingName = bindingName;
+  }
+
   @Override
   public int hashCode() {
-    return Objects.hash(arch, conditions, dbOps, labelPrefix, managedSql, os, podStatuses);
+    return Objects.hash(arch, conditions, dbOps, labelPrefix, managedSql, os, podStatuses,
+        bindingName);
   }
 
   @Override
@@ -126,7 +138,8 @@ public class StackGresClusterStatus {
     return Objects.equals(arch, other.arch) && Objects.equals(conditions, other.conditions)
         && Objects.equals(dbOps, other.dbOps) && Objects.equals(labelPrefix, other.labelPrefix)
         && Objects.equals(managedSql, other.managedSql) && Objects.equals(os, other.os)
-        && Objects.equals(podStatuses, other.podStatuses);
+        && Objects.equals(podStatuses, other.podStatuses)
+        && Objects.equals(bindingName, other.bindingName);
   }
 
   @Override

@@ -19,9 +19,11 @@ import io.sundr.builder.annotations.Buildable;
 @Buildable(editableEnabled = false, validationEnabled = false, generateBuilderPackage = false,
     lazyCollectionInitEnabled = false, lazyMapInitEnabled = false,
     builderPackage = "io.fabric8.kubernetes.api.builder")
-public class StackGresServiceBinding {
+public class StackGresClusterCredentialServiceBindingSpec {
 
   private String name;
+
+  private String key;
 
   public String getName() {
     return name;
@@ -31,9 +33,17 @@ public class StackGresServiceBinding {
     this.name = name;
   }
 
+  public String getKey() {
+    return key;
+  }
+
+  public void setKey(String key) {
+    this.key = key;
+  }
+
   @Override
   public int hashCode() {
-    return Objects.hash(name);
+    return Objects.hash(name, key);
   }
 
   @Override
@@ -41,11 +51,12 @@ public class StackGresServiceBinding {
     if (this == obj) {
       return true;
     }
-    if (!(obj instanceof StackGresServiceBinding)) {
+    if (!(obj instanceof StackGresClusterCredentialServiceBindingSpec)) {
       return false;
     }
-    StackGresServiceBinding other = (StackGresServiceBinding) obj;
-    return Objects.equals(name, other.name);
+    StackGresClusterCredentialServiceBindingSpec
+        other = (StackGresClusterCredentialServiceBindingSpec) obj;
+    return Objects.equals(name, other.name) && Objects.equals(key, other.key);
   }
 
   @Override

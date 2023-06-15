@@ -7,10 +7,17 @@ package io.stackgres.common.crd.sgcluster;
 
 import java.util.Objects;
 
+import javax.validation.Valid;
+import javax.validation.constraints.AssertTrue;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import io.stackgres.common.StackGresUtil;
+import io.stackgres.common.crd.SecretKeySelector;
+import io.stackgres.common.validation.FieldReference;
+import io.stackgres.common.validation.FieldReference.ReferencedField;
 import io.sundr.builder.annotations.Buildable;
 
 @RegisterForReflection
@@ -25,9 +32,26 @@ public class StackGresClusterServiceBindingConfiguration {
 
   private String database;
 
+  @Valid
   private String username;
 
-  private StackGresClusterCredentialServiceBindingSpec password;
+  @Valid
+  private SecretKeySelector password;
+
+  @ReferencedField("username")
+  interface Username extends FieldReference { }
+
+  @ReferencedField("password")
+  interface Password extends FieldReference { }
+
+  @JsonIgnore
+  @AssertTrue(
+      message = "username and password values can only be null or not null both at the same time",
+      payload = { Username.class, Password.class })
+  public boolean isNotNullUsernameAndPasswordOrIsNullUsernameAndPassword() {
+    return ((username == null || username.isEmpty()) && password == null)
+        || ((username != null && !username.isEmpty()) && password != null);
+  }
 
   public String getProvider() {
     return provider;
@@ -53,12 +77,11 @@ public class StackGresClusterServiceBindingConfiguration {
     this.username = username;
   }
 
-  public StackGresClusterCredentialServiceBindingSpec getPassword() {
+  public SecretKeySelector getPassword() {
     return password;
   }
 
-  public void setPassword(
-      StackGresClusterCredentialServiceBindingSpec password) {
+  public void setPassword(SecretKeySelector password) {
     this.password = password;
   }
 

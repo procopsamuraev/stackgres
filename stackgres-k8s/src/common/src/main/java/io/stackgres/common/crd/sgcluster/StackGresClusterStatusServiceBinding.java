@@ -19,7 +19,7 @@ import io.sundr.builder.annotations.Buildable;
 @Buildable(editableEnabled = false, validationEnabled = false, generateBuilderPackage = false,
     lazyCollectionInitEnabled = false, lazyMapInitEnabled = false,
     builderPackage = "io.fabric8.kubernetes.api.builder")
-public class StackGresServiceBinding {
+public class StackGresClusterStatusServiceBinding {
 
   private String name;
 
@@ -41,10 +41,10 @@ public class StackGresServiceBinding {
     if (this == obj) {
       return true;
     }
-    if (!(obj instanceof StackGresServiceBinding)) {
+    if (!(obj instanceof StackGresClusterStatusServiceBinding)) {
       return false;
     }
-    StackGresServiceBinding other = (StackGresServiceBinding) obj;
+    StackGresClusterStatusServiceBinding other = (StackGresClusterStatusServiceBinding) obj;
     return Objects.equals(name, other.name);
   }
 

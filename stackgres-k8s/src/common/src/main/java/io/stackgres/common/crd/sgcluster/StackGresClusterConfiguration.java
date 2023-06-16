@@ -55,7 +55,7 @@ public class StackGresClusterConfiguration {
   @Valid
   private StackGresClusterCredentials credentials;
 
-  private StackGresClusterServiceBindingConfiguration binding;
+  private StackGresClusterConfigurationServiceBinding binding;
 
   @ReferencedField("sgPostgresConfig")
   interface SgPostgresConfig extends FieldReference {
@@ -135,12 +135,12 @@ public class StackGresClusterConfiguration {
     this.credentials = credentials;
   }
 
-  public StackGresClusterServiceBindingConfiguration getBinding() {
+  public StackGresClusterConfigurationServiceBinding getBinding() {
     return binding;
   }
 
   public void setBinding(
-      StackGresClusterServiceBindingConfiguration binding) {
+      StackGresClusterConfigurationServiceBinding binding) {
     this.binding = binding;
   }
 

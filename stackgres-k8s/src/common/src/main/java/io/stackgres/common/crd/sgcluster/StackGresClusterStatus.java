@@ -54,7 +54,7 @@ public class StackGresClusterStatus {
   private String labelPrefix;
 
   @JsonProperty("binding")
-  private StackGresServiceBinding binding;
+  private StackGresClusterStatusServiceBinding binding;
 
   public List<Condition> getConditions() {
     return conditions;
@@ -112,11 +112,11 @@ public class StackGresClusterStatus {
     this.labelPrefix = labelPrefix;
   }
 
-  public StackGresServiceBinding getBinding() {
+  public StackGresClusterStatusServiceBinding getBinding() {
     return binding;
   }
 
-  public void setBinding(StackGresServiceBinding binding) {
+  public void setBinding(StackGresClusterStatusServiceBinding binding) {
     this.binding = binding;
   }
 

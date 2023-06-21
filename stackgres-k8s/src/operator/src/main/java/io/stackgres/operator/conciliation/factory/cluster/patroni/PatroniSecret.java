@@ -10,6 +10,7 @@ import static io.stackgres.common.StackGresUtil.getPostgresFlavorComponent;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -83,9 +84,9 @@ public class PatroniSecret
     final Map<String, String> labels = labelFactory.genericLabels(cluster);
 
     final Map<String, String> previousSecretData = context.getDatabaseSecret()
-      .map(Secret::getData)
-      .map(ResourceUtil::decodeSecret)
-      .orElse(Map.of());
+        .map(Secret::getData)
+        .map(ResourceUtil::decodeSecret)
+        .orElse(Map.of());
 
     final Map<String, String> data = new HashMap<>();
 
@@ -114,15 +115,6 @@ public class PatroniSecret
       .build();
   }
 
-  public static Tuple2<String, String> getSuperuserCredentials(StackGresClusterContext context) {
-    final Map<String, String> previousSecretData = context.getDatabaseSecret()
-      .map(Secret::getData)
-      .map(ResourceUtil::decodeSecret)
-      .orElse(Map.of());
-
-    return getSuperuserCredentials(context, previousSecretData);
-  }
-
   private void setSuperuserCredentials(StackGresClusterContext context,
       Map<String, String> previousSecretData, Map<String, String> data) {
     var superuserCredentials = getSuperuserCredentials(context, previousSecretData);
@@ -132,8 +124,17 @@ public class PatroniSecret
         .orElse(data.get(SUPERUSER_PASSWORD_KEY)));
   }
 
+  public static Tuple2<String, String> getSuperuserCredentials(StackGresClusterContext context) {
+    final Map<String, String> previousSecretData = context.getDatabaseSecret()
+        .map(Secret::getData)
+        .map(ResourceUtil::decodeSecret)
+        .orElse(Map.of());
+
+    return getSuperuserCredentials(context, previousSecretData);
+  }
+
   private static Tuple2<String, String> getSuperuserCredentials(StackGresClusterContext context,
-    Map<String, String> previousSecretData) {
+      Map<String, String> previousSecretData) {
     return Tuple.tuple(context.getSuperuserUsername()
       .orElse(previousSecretData
         .getOrDefault(SUPERUSER_USERNAME_ENV, SUPERUSER_USERNAME)), context.getSuperuserPassword()
@@ -176,7 +177,7 @@ public class PatroniSecret
   }
 
   private void setBabelfishCredentials(StackGresClusterContext context,
-    final Map<String, String> previousSecretData, final Map<String, String> data) {
+      final Map<String, String> previousSecretData, final Map<String, String> data) {
     data.put(BABELFISH_PASSWORD_KEY, previousSecretData
         .getOrDefault(BABELFISH_PASSWORD_KEY, context.getGeneratedBabelfishPassword()));
     data.put(BABELFISH_CREATE_USER_SQL_KEY,
@@ -187,7 +188,7 @@ public class PatroniSecret
   }
 
   private void setPgBouncerCredentials(StackGresClusterContext context,
-    final Map<String, String> previousSecretData, final Map<String, String> data) {
+      final Map<String, String> previousSecretData, final Map<String, String> data) {
     data.put(PGBOUNCER_ADMIN_USERNAME_ENV, PGBOUNCER_ADMIN_USERNAME);
     data.put(PGBOUNCER_ADMIN_PASSWORD_KEY, previousSecretData
         .getOrDefault(PGBOUNCER_ADMIN_PASSWORD_KEY, context.getGeneratedPgBouncerAdminPassword()));

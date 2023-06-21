@@ -87,7 +87,18 @@ class PatroniSecretTest {
     cluster = Fixtures.cluster().loadDefault().get();
     patroniSecret.setFactoryFactory(labelFactory);
     when(labelFactory.genericLabels(any(StackGresCluster.class))).thenReturn(ImmutableMap.of());
-
+    when(generatorContext.getGeneratedReplicationPassword())
+        .thenReturn("dummy-replication-password");
+    when(generatorContext.getGeneratedPgBouncerAdminPassword())
+        .thenReturn("dummy-pgbouncer-admin-password");
+    when(generatorContext.getGeneratedPgBouncerStatsPassword())
+        .thenReturn("dummy-pgbouncer-stats-password");
+    when(generatorContext.getGeneratedSuperuserPassword())
+        .thenReturn("dummy-superuser-password");
+    when(generatorContext.getGeneratedAuthenticatorPassword())
+        .thenReturn("dummy-patroniauthenticator-password");
+    when(generatorContext.getGeneratedPatroniRestApiPassword())
+        .thenReturn("dummy-patronirestapi-password");
     when(generatorContext.getSource()).thenReturn(cluster);
   }
 
@@ -258,6 +269,7 @@ class PatroniSecretTest {
   @Test
   void generateResourcesForBabelfishFlavor_shouldGenerateRandomPasswords() {
     cluster.getSpec().getPostgres().setFlavor(StackGresPostgresFlavor.BABELFISH.toString());
+    when(generatorContext.getGeneratedBabelfishPassword()).thenReturn("dummy-babelfish-password");
     Secret secret = patroniSecret.buildSource(generatorContext);
 
     final Map<String, String> data = ResourceUtil.decodeSecret(secret.getData());

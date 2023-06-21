@@ -87,6 +87,7 @@ public interface StackGresClusterContext extends GenerationContext<StackGresClus
 
   Optional<String> getSuperuserPassword();
 
+  @Value.Derived
   default String getGeneratedSuperuserPassword() {
     return generatePassword();
   }
@@ -95,6 +96,7 @@ public interface StackGresClusterContext extends GenerationContext<StackGresClus
 
   Optional<String> getReplicationPassword();
 
+  @Value.Derived
   default String getGeneratedReplicationPassword() {
     return generatePassword();
   }
@@ -105,24 +107,29 @@ public interface StackGresClusterContext extends GenerationContext<StackGresClus
 
   Optional<String> getUserPasswordForBinding();
 
+  @Value.Derived
   default String getGeneratedAuthenticatorPassword() {
     return generatePassword();
   }
 
   Optional<String> getPatroniRestApiPassword();
 
+  @Value.Derived
   default String getGeneratedPatroniRestApiPassword() {
     return generatePassword();
   }
 
+  @Value.Derived
   default String getGeneratedBabelfishPassword() {
     return generatePassword();
   }
 
+  @Value.Derived
   default String getGeneratedPgBouncerAdminPassword() {
     return generatePassword();
   }
 
+  @Value.Derived
   default String getGeneratedPgBouncerStatsPassword() {
     return generatePassword();
   }
@@ -279,7 +286,7 @@ public interface StackGresClusterContext extends GenerationContext<StackGresClus
         .orElse(Map.of());
   }
 
-  private String generatePassword() {
+  default String generatePassword() {
     return UUID.randomUUID().toString().substring(4, 22);
   }
 }

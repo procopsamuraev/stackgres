@@ -15,6 +15,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
@@ -465,17 +466,16 @@ public class ClusterRequiredResourcesGenerator
         secretKeySelector -> "Patroni REST API password secret " + secretKeySelector.getName()
         + " was not found");
 
-    final var serviceBindingConfig =
-      Optional.ofNullable(spec)
+    final var serviceBindingConfig = Optional.ofNullable(spec)
         .map(StackGresClusterSpec::getConfiguration)
         .map(StackGresClusterConfiguration::getBinding);
     final var userPasswordForBinding = getSecretAndKeyOrThrow(clusterNamespace,
-      serviceBindingConfig,
-      StackGresClusterConfigurationServiceBinding::getPassword,
-      secretKeySelector -> "Service Binding password key " + secretKeySelector.getKey()
-        + " was not found in secret " + secretKeySelector.getName(),
-      secretKeySelector -> "Service Binding password secret " + secretKeySelector.getName()
-        + " was not found");
+        serviceBindingConfig,
+        StackGresClusterConfigurationServiceBinding::getPassword,
+        secretKeySelector -> "Service Binding password key " + secretKeySelector.getKey()
+          + " was not found in secret " + secretKeySelector.getName(),
+        secretKeySelector -> "Service Binding password secret " + secretKeySelector.getName()
+          + " was not found");
 
     configuredUsers = new Credentials(
         superuserUsername,

@@ -325,6 +325,10 @@ public class ClusterRequiredResourcesGenerator
         StackGresPasswordKeys.AUTHENTICATOR_PASSWORD_ENV,
         "Authenticator password key " + StackGresPasswordKeys.AUTHENTICATOR_PASSWORD_ENV
         + " was not found in secret " + secretName);
+
+    final var userPasswordForBinding = getUserPasswordServiceBindingFromSecret(clusterNamespace,
+        spec);
+
     replicateFromUsers = new Credentials(
         superuserUsername,
         superuserPassword,
@@ -333,7 +337,7 @@ public class ClusterRequiredResourcesGenerator
         authenticatorUsername,
         authenticatorPassword,
       Optional.empty(),
-      Optional.empty());
+      userPasswordForBinding);
     return replicateFromUsers;
   }
 
@@ -389,6 +393,10 @@ public class ClusterRequiredResourcesGenerator
         + " was not found in secret " + secretKeySelector.getName(),
         secretKeySelector -> "Authenticator password secret " + secretKeySelector.getName()
         + " was not found");
+
+    final var userPasswordForBinding = getUserPasswordServiceBindingFromSecret(clusterNamespace,
+        spec);
+
     replicateFromUsers = new Credentials(
         superuserUsername,
         superuserPassword,
@@ -397,7 +405,7 @@ public class ClusterRequiredResourcesGenerator
         authenticatorUsername,
         authenticatorPassword,
       Optional.empty(),
-      Optional.empty());
+      userPasswordForBinding);
     return replicateFromUsers;
   }
 
@@ -466,16 +474,8 @@ public class ClusterRequiredResourcesGenerator
         secretKeySelector -> "Patroni REST API password secret " + secretKeySelector.getName()
         + " was not found");
 
-    final var serviceBindingConfig = Optional.ofNullable(spec)
-        .map(StackGresClusterSpec::getConfiguration)
-        .map(StackGresClusterConfiguration::getBinding);
-    final var userPasswordForBinding = getSecretAndKeyOrThrow(clusterNamespace,
-        serviceBindingConfig,
-        StackGresClusterConfigurationServiceBinding::getPassword,
-        secretKeySelector -> "Service Binding password key " + secretKeySelector.getKey()
-          + " was not found in secret " + secretKeySelector.getName(),
-        secretKeySelector -> "Service Binding password secret " + secretKeySelector.getName()
-          + " was not found");
+    final var userPasswordForBinding = getUserPasswordServiceBindingFromSecret(clusterNamespace,
+        spec);
 
     configuredUsers = new Credentials(
         superuserUsername,
@@ -487,6 +487,20 @@ public class ClusterRequiredResourcesGenerator
         patroniRestApiPassword,
         userPasswordForBinding);
     return configuredUsers;
+  }
+
+  private Optional<String> getUserPasswordServiceBindingFromSecret(final String clusterNamespace,
+      final StackGresClusterSpec spec) {
+    final var serviceBindingConfig = Optional.ofNullable(spec)
+        .map(StackGresClusterSpec::getConfiguration)
+        .map(StackGresClusterConfiguration::getBinding);
+    return getSecretAndKeyOrThrow(clusterNamespace,
+      serviceBindingConfig,
+      StackGresClusterConfigurationServiceBinding::getPassword,
+      secretKeySelector -> "Service Binding password key " + secretKeySelector.getKey()
+        + " was not found in secret " + secretKeySelector.getName(),
+      secretKeySelector -> "Service Binding password secret " + secretKeySelector.getName()
+        + " was not found");
   }
 
   record PostgresSsl(

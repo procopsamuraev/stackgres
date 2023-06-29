@@ -219,6 +219,8 @@ public class ClusterRequiredResourcesGenerator
             .orElseThrow(() -> new IllegalArgumentException("Can not find SGObjectStorage "
                 + sgObjectStorage + " to replicate from")));
 
+    final var userPasswordForBinding = getUserPasswordServiceBindingFromSecret(clusterNamespace,
+        spec);
     final PostgresSsl postgresSsl = getPostgresSsl(clusterNamespace, config);
 
     StackGresClusterContext context = ImmutableStackGresClusterContext.builder()
@@ -244,7 +246,7 @@ public class ClusterRequiredResourcesGenerator
         .patroniRestApiPassword(credentials.patroniRestApiPassword)
         .postgresSslCertificate(postgresSsl.certificate)
         .postgresSslPrivateKey(postgresSsl.privateKey)
-        .userPasswordForBinding(credentials.userPasswordForBinding)
+        .userPasswordForBinding(userPasswordForBinding)
         .build();
 
     return decorator.decorateResources(context);
@@ -257,8 +259,7 @@ public class ClusterRequiredResourcesGenerator
       Optional<String> replicationPassword,
       Optional<String> authenticatorUsername,
       Optional<String> authenticatorPassword,
-      Optional<String> patroniRestApiPassword,
-      Optional<String> userPasswordForBinding) {
+      Optional<String> patroniRestApiPassword) {
   }
 
   private Credentials getCredentials(
@@ -326,9 +327,6 @@ public class ClusterRequiredResourcesGenerator
         "Authenticator password key " + StackGresPasswordKeys.AUTHENTICATOR_PASSWORD_ENV
         + " was not found in secret " + secretName);
 
-    final var userPasswordForBinding = getUserPasswordServiceBindingFromSecret(clusterNamespace,
-        spec);
-
     replicateFromUsers = new Credentials(
         superuserUsername,
         superuserPassword,
@@ -336,8 +334,7 @@ public class ClusterRequiredResourcesGenerator
         replicationPassword,
         authenticatorUsername,
         authenticatorPassword,
-      Optional.empty(),
-      userPasswordForBinding);
+      Optional.empty());
     return replicateFromUsers;
   }
 
@@ -394,9 +391,6 @@ public class ClusterRequiredResourcesGenerator
         secretKeySelector -> "Authenticator password secret " + secretKeySelector.getName()
         + " was not found");
 
-    final var userPasswordForBinding = getUserPasswordServiceBindingFromSecret(clusterNamespace,
-        spec);
-
     replicateFromUsers = new Credentials(
         superuserUsername,
         superuserPassword,
@@ -404,8 +398,7 @@ public class ClusterRequiredResourcesGenerator
         replicationPassword,
         authenticatorUsername,
         authenticatorPassword,
-      Optional.empty(),
-      userPasswordForBinding);
+      Optional.empty());
     return replicateFromUsers;
   }
 
@@ -474,9 +467,6 @@ public class ClusterRequiredResourcesGenerator
         secretKeySelector -> "Patroni REST API password secret " + secretKeySelector.getName()
         + " was not found");
 
-    final var userPasswordForBinding = getUserPasswordServiceBindingFromSecret(clusterNamespace,
-        spec);
-
     configuredUsers = new Credentials(
         superuserUsername,
         superuserPassword,
@@ -484,8 +474,7 @@ public class ClusterRequiredResourcesGenerator
         replicationPassword,
         authenticatorUsername,
         authenticatorPassword,
-        patroniRestApiPassword,
-        userPasswordForBinding);
+        patroniRestApiPassword);
     return configuredUsers;
   }
 

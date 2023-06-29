@@ -53,13 +53,13 @@ public class ServiceBindingSecret implements ResourceGenerator<StackGresClusterC
       .withName(this.getServiceBindingName(context.getCluster()))
       .withNamespace(context.getCluster().getMetadata().getNamespace())
       .endMetadata()
-      .addToData("type", DEFAULT_SERVICE_BINDING_TYPE)
-      .addToData("provider", DEFAULT_SERVICE_BINDING_PROVIDER)
-      .addToData("host", this.getPgHost(context))
-      .addToData("port", this.getPgPort())
-      .addToData("username", this.getPgUsernameFromSuperUserCredentials(context))
-      .addToData("password", this.getPgUserPasswordFromSuperUserCredentials(context))
-      .addToData("uri", this.buildPgConnectionUri(context,
+      .addToStringData("type", DEFAULT_SERVICE_BINDING_TYPE)
+      .addToStringData("provider", DEFAULT_SERVICE_BINDING_PROVIDER)
+      .addToStringData("host", this.getPgHost(context))
+      .addToStringData("port", this.getPgPort())
+      .addToStringData("username", this.getPgUsernameFromSuperUserCredentials(context))
+      .addToStringData("password", this.getPgUserPasswordFromSuperUserCredentials(context))
+      .addToStringData("uri", this.buildPgConnectionUri(context,
         this.getPgUsernameFromSuperUserCredentials(context),
         this.getPgUserPasswordFromSuperUserCredentials(context), null))
       .build();
@@ -75,15 +75,18 @@ public class ServiceBindingSecret implements ResourceGenerator<StackGresClusterC
       .withName(this.getServiceBindingName(cluster))
       .withNamespace(cluster.getMetadata().getNamespace())
       .endMetadata()
-      .addToData("type", DEFAULT_SERVICE_BINDING_TYPE)
-      .addToData("provider", serviceBindingConfiguration.getProvider())
-      .addToData("host", this.getPgHost(context))
-      .addToData("port", this.getPgPort())
-      .addToData("username", serviceBindingConfiguration.getUsername())
-      .addToData("password", context.getUserPasswordForBinding().get())
-      .addToData("uri", this.buildPgConnectionUri(context,
+      .addToStringData("type", DEFAULT_SERVICE_BINDING_TYPE)
+      .addToStringData("provider", serviceBindingConfiguration.getProvider())
+      .addToStringData("host", this.getPgHost(context))
+      .addToStringData("port", this.getPgPort())
+      .addToStringData("username", Optional.of(serviceBindingConfiguration
+          .getUsername()).orElse(this.getPgUsernameFromSuperUserCredentials(context)))
+      .addToStringData("password", context.getUserPasswordForBinding()
+          .orElse(this.getPgUserPasswordFromSuperUserCredentials(context)))
+      .addToStringData("uri", this.buildPgConnectionUri(context,
         serviceBindingConfiguration.getUsername(),
-        context.getUserPasswordForBinding().get(),
+        context.getUserPasswordForBinding()
+          .orElse(this.getPgUserPasswordFromSuperUserCredentials(context)),
         serviceBindingConfiguration.getDatabase()))
       .build();
   }

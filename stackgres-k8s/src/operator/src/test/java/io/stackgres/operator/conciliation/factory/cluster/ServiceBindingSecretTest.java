@@ -79,7 +79,7 @@ public class ServiceBindingSecretTest {
     Secret serviceBindingSecret = (Secret) secrets.get(0);
     assertEquals(serviceBindingSecret.getType(), "servicebinding.io/postgresql");
 
-    Map<String, String> data = serviceBindingSecret.getData();
+    Map<String, String> data = serviceBindingSecret.getStringData();
     assertEquals(data.get("type"), "postgresql");
     assertEquals(data.get("provider"), "stackgres");
     assertEquals(data.get("host"), "stackgres.stackgres");
@@ -158,7 +158,7 @@ public class ServiceBindingSecretTest {
     Secret serviceBindingSecret = (Secret) secrets.get(0);
     assertEquals(serviceBindingSecret.getType(), "servicebinding.io/postgresql");
 
-    Map<String, String> data = serviceBindingSecret.getData();
+    Map<String, String> data = serviceBindingSecret.getStringData();
     assertEquals(data.get("type"), "postgresql");
     assertEquals(data.get("provider"), "stackgres");
     assertEquals(data.get("host"), "stackgres.stackgres");

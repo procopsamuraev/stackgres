@@ -94,18 +94,18 @@ public class ServiceBindingSecretTest {
   @Test
   void generateResourseWhenServiceBindingConfigurationIsPresentAndWhenDbNameIsAbsent() {
     StackGresClusterConfigurationServiceBinding sgClusterConfigServiceBinding =
-      new StackGresClusterConfigurationServiceBinding();
+        new StackGresClusterConfigurationServiceBinding();
     sgClusterConfigServiceBinding.setProvider("stackgres");
     sgClusterConfigServiceBinding.setUsername("superuserdb");
     sgClusterConfigServiceBinding.setPassword(
       new SecretKeySelector(SUPERUSER_PASSWORD_KEY, SUPERUSER_USERNAME_ENV));
     context.getCluster().getSpec().getConfiguration().setBinding(sgClusterConfigServiceBinding);
     when(context.getUserPasswordForBinding())
-      .thenReturn(Optional.of(decodedExistentSecretData.get(SUPERUSER_USERNAME_ENV)));
+        .thenReturn(Optional.of(decodedExistentSecretData.get(SUPERUSER_USERNAME_ENV)));
 
     Stream<HasMetadata> hasMetadataStream = serviceBindingSecret.generateResource(context);
     assertSecretDataWithoutConfiguration(hasMetadataStream, "superuserdb",
-      decodedExistentSecretData.get(SUPERUSER_USERNAME_ENV));
+        decodedExistentSecretData.get(SUPERUSER_USERNAME_ENV));
   }
 
   @Test
